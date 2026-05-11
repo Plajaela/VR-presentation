@@ -16,9 +16,24 @@ export default function DemoProject() {
       </div>
 
       <div className="glass-card demo-section">
-        <div className="demo-banner">
-          <div className="demo-banner-bg" />
-          <span className="demo-banner-icon">🦽 🤖</span>
+        <div className="demo-video-wrapper">
+          {/* 
+            TODO: 
+            1. Copy your video file into the "public" folder of this project.
+            2. Rename the file to "demo-video.mp4" (or change the src below to match your filename).
+          */}
+          <video 
+            className="demo-video" 
+            controls 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            src="/demo-video.mp4"
+            poster="/demo-poster.jpg"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <h2 className="demo-content-title">How it works</h2>
