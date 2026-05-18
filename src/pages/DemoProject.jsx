@@ -19,18 +19,21 @@ export default function DemoProject() {
         <div className="demo-video-wrapper">
           {/* 
             TODO: 
-            1. Copy the Video ID from your YouTube link (e.g. for https://www.youtube.com/watch?v=dQw4w9WgXcQ, the ID is dQw4w9WgXcQ)
-            2. Replace "YOUR_YOUTUBE_VIDEO_ID_HERE" with that ID.
+            1. Copy your compressed video file into the "public" folder of this project.
+            2. Rename the file to "demo-video.mp4" (or change the src below to match your filename).
           */}
-          <iframe 
+          <video 
             className="demo-video" 
-            src="https://www.youtube.com/embed/YOUR_YOUTUBE_VIDEO_ID_HERE?autoplay=1&mute=1&loop=1&playlist=YOUR_YOUTUBE_VIDEO_ID_HERE" 
-            title="YouTube video player" 
-            frameBorder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen
-          ></iframe>
+            controls 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            src="/demo-video.mp4"
+            poster="/demo-poster.jpg"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <h2 className="demo-content-title">How it works</h2>
