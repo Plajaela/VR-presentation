@@ -1,28 +1,16 @@
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-
 export function useGPT() {
   const fetchGPTResponse = async (userMessage) => {
     try {
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      const res = await fetch('/api/gpt', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({ 
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "You are the ETC (Enabling Technology Collaboratory) assistant. Keep answers helpful, concise, and friendly." },
-            { role: "user", content: userMessage }
-          ],
-          temperature: 0.3
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
       });
 
       if (!res.ok) throw new Error('Failed to fetch response from GPT');
 
       const data = await res.json();
-      return data.choices[0].message.content;
+      return data.reply;
 
     } catch (error) {
       console.error(error);
@@ -32,21 +20,17 @@ export function useGPT() {
 
   const transcribeAudio = async (audioBlob) => {
     const formData = new FormData();
-    formData.append("file", audioBlob, "recording.webm");
-    formData.append("model", "whisper-1");
+    formData.append("audio", audioBlob, "recording.webm");
 
-    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    const res = await fetch("/api/stt", {
       method: "POST",
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
-      },
       body: formData,
     });
 
     if (!res.ok) throw new Error("STT request failed");
 
     const data = await res.json();
-    return data.text;
+    return data.transcript;
   };
 
   return { fetchGPTResponse, transcribeAudio };
