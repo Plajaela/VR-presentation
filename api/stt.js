@@ -1,12 +1,16 @@
 import OpenAI from "openai";
 import formidable from "formidable";
 import fs from "fs";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const config = {
   api: { bodyParser: false },
 };
 
-const openai = new OpenAI();
+const openai = new OpenAI({
+  apiKey: process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -24,7 +28,7 @@ export default async function handler(req, res) {
 
     const transcription = await openai.audio.transcriptions.create({
       file: fs.createReadStream(audioFile.filepath),
-      model: "gpt-4o-transcribe",
+      model: "whisper-1",
       language: "en",
     });
 
