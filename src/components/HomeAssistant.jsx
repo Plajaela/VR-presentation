@@ -134,10 +134,20 @@ export default function HomeAssistant() {
 
   // --- Custom TTS Handler for CharacterViewer ---
   const handleTTSFetch = async (text) => {
-    const response = await fetch('/api/tts', {
+    const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+    
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, format: 'wav' })
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({ 
+        model: "tts-1",
+        voice: "shimmer", // Standard OpenAI voice
+        input: text,
+        response_format: 'wav'
+      })
     });
 
     // Signal the React component that the fetch is done
