@@ -32,6 +32,48 @@ function MriHeartbeatIcon({ className }) {
   );
 }
 
+function EducationIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+      <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
+    </svg>
+  );
+}
+
+function MicIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"></path>
+    </svg>
+  );
+}
+
+function UploadIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+    </svg>
+  );
+}
+
+function MessageSquareIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+  );
+}
+
+function BookOpenIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+    </svg>
+  );
+}
+
 const projects = [
   {
     number: '01',
@@ -59,6 +101,15 @@ const projects = [
     color: '#059669',
     isMri: true,
     iconComponent: MriHeartbeatIcon
+  },
+  {
+    number: '04',
+    title: 'Virtual Practice Environment for Oral Exam Preparation',
+    desc: 'A virtual practice environment where students interact with an AI simulating a teacher for oral exam preparation',
+    tag: 'Education & AI',
+    color: '#0284c7',
+    isOral: true,
+    iconComponent: EducationIcon
   }
 ];
 
@@ -624,6 +675,106 @@ export default function ProjectDetail() {
                             <span className="cgh-text-primary">Changi General Hospital</span>
                             <span className="cgh-text-secondary">SingHealth</span>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {isExpanded && proj.isOral && (
+                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="arast-divider"></div>
+                  
+                  <div className="arast-container">
+                    <h2 className="arast-main-title">Project Overview</h2>
+
+                    {/* Section 1: Overview and main illustration */}
+                    <div className="oral-overview-section">
+                      <p className="arast-paragraph">
+                        This project creates a virtual practice environment where students interact with an AI simulating a teacher for oral exam preparation.
+                      </p>
+                      
+                      <div className="arast-media-wrapper oral-media-overview">
+                        <img 
+                          src="/oral_exam_overview.png" 
+                          alt="AI Oral Exam Practice Environment Illustration" 
+                          className="arast-media-img" 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="arast-divider-sub"></div>
+
+                    {/* Section 2: Four Detailed Features Blocks */}
+                    <div className="oral-features-container">
+                      <div className="oral-feature-card oral-feature-card--teal">
+                        <div className="oral-feature-card-icon">
+                          <MicIcon className="oral-icon-svg" />
+                        </div>
+                        <p className="oral-feature-card-text">
+                          Using voice-to-text, large language models (LLM), and text-to-voice technologies, it provides an interactive learning experience tailored to individual needs.
+                        </p>
+                      </div>
+
+                      <div className="oral-feature-card oral-feature-card--violet">
+                        <div className="oral-feature-card-icon">
+                          <UploadIcon className="oral-icon-svg" />
+                        </div>
+                        <p className="oral-feature-card-text">
+                          Teachers can upload visual stimuli, exam topics, and assessment rubrics, allowing the AI to guide students through practice sessions resembling the actual exam.
+                        </p>
+                      </div>
+
+                      <div className="oral-feature-card oral-feature-card--teal">
+                        <div className="oral-feature-card-icon">
+                          <MessageSquareIcon className="oral-icon-svg" />
+                        </div>
+                        <p className="oral-feature-card-text">
+                          At the end of each session, the AI generates personalized feedback based on the rubrics, helping students identify areas for improvement and adjust their performance in real-time.
+                        </p>
+                      </div>
+
+                      <div className="oral-feature-card oral-feature-card--violet">
+                        <div className="oral-feature-card-icon">
+                          <BookOpenIcon className="oral-icon-svg" />
+                        </div>
+                        <p className="oral-feature-card-text">
+                          Teachers can review the AI-generated feedback to ensure accuracy. Overall, the proposal offers an effective, scalable solution for oral exam preparation, empowering students to practice independently and improve their performance for better results.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="arast-divider-sub"></div>
+
+                    {/* Section 3: Pilot Testing */}
+                    <div className="oral-pilot-section">
+                      <div className="arast-media-wrapper oral-pilot-media">
+                        <img 
+                          src="/oral_exam_pilot.png" 
+                          alt="Pilot testing classroom environment" 
+                          className="arast-media-img" 
+                        />
+                      </div>
+                      <div className="arast-text-content">
+                        <p className="arast-paragraph">
+                          Pilot testing will be conducted in a controlled environment at both Dunman Secondary School and Bartley Secondary School.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Partner Branding Footer */}
+                    <div className="arast-branding-footer">
+                      <span className="arast-brand-label">Brand partnered with</span>
+                      <div className="oral-logos-container">
+                        <div className="oral-logo-item">
+                          <img src="/dunman_logo.png" alt="Dunman Secondary School" className="oral-partner-logo-img" />
+                          <span className="oral-partner-logo-name">Dunman Secondary School</span>
+                        </div>
+                        <div className="oral-logo-item">
+                          <img src="/bartley_logo.png" alt="Bartley Secondary School" className="oral-partner-logo-img" />
+                          <span className="oral-partner-logo-name">Bartley Secondary School</span>
                         </div>
                       </div>
                     </div>

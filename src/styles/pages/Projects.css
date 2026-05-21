@@ -984,3 +984,150 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================
+   Oral Exam Project Custom Styles
+   ============================ */
+.oral-overview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.oral-media-overview {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.oral-features-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.oral-feature-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: var(--radius-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.oral-feature-card:hover {
+  transform: translateX(4px);
+}
+
+.oral-feature-card--teal {
+  background: rgba(13, 148, 136, 0.04);
+  border-left: 4px solid var(--accent-teal);
+  border-color: rgba(13, 148, 136, 0.08) rgba(13, 148, 136, 0.08) rgba(13, 148, 136, 0.08) var(--accent-teal);
+}
+
+.oral-feature-card--teal .oral-feature-card-icon {
+  color: var(--accent-teal);
+  background: rgba(13, 148, 136, 0.08);
+}
+
+.oral-feature-card--violet {
+  background: rgba(124, 58, 237, 0.04);
+  border-left: 4px solid var(--accent-violet);
+  border-color: rgba(124, 58, 237, 0.08) rgba(124, 58, 237, 0.08) rgba(124, 58, 237, 0.08) var(--accent-violet);
+}
+
+.oral-feature-card--violet .oral-feature-card-icon {
+  color: var(--accent-violet);
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.oral-feature-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.oral-icon-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.oral-feature-card-text {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  font-weight: 550;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: left;
+}
+
+.oral-feature-card--teal .oral-feature-card-text {
+  color: #115e59;
+}
+
+.oral-feature-card--violet .oral-feature-card-text {
+  color: #5b21b6;
+}
+
+/* Pilot testing section */
+.oral-pilot-section {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.oral-pilot-media {
+  max-height: 180px;
+}
+
+/* Logos container in footer */
+.oral-logos-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.oral-logo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.oral-partner-logo-img {
+  width: 26px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.oral-partner-logo-name {
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: var(--text-heading);
+}
+
+@media (max-width: 768px) {
+  .oral-pilot-section {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  .oral-pilot-media {
+    max-height: none;
+    order: -1;
+  }
+}
