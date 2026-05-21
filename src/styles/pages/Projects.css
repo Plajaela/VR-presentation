@@ -1220,15 +1220,20 @@
 }
 
 .polite-images-column {
-  display: flex;
+  position: relative;
+  width: 100%;
   height: 100%;
 }
 
 .polite-vr-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 16px); /* padding at the bottom to balance nicely */
   border-radius: var(--radius-sm);
   object-fit: cover;
+  object-position: center top;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -1244,6 +1249,7 @@
   }
   
   .polite-vr-image {
+    position: relative;
     width: 100%;
     height: 100%;
   }
