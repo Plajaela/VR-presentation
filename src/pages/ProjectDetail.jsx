@@ -936,18 +936,8 @@ export default function ProjectDetail() {
                       {/* Right Column: Images */}
                       <div className="polite-images-column">
                         <img 
-                          src="/polite_vr_corridor.png" 
-                          alt="VR Corridor simulation" 
-                          className="polite-vr-image" 
-                        />
-                        <img 
-                          src="/polite_vr_fire.png" 
-                          alt="VR Fire extinguisher simulation" 
-                          className="polite-vr-image" 
-                        />
-                        <img 
-                          src="/polite_vr_ladder.png" 
-                          alt="VR Ladder safety simulation" 
+                          src="/polite_vr_mockup.png" 
+                          alt="VR simulations overview" 
                           className="polite-vr-image" 
                         />
                       </div>
