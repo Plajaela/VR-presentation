@@ -74,6 +74,68 @@ function BookOpenIcon({ className }) {
   );
 }
 
+function VrHeadsetIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 14l-.5-3.5A2 2 0 0 1 5.5 8h13a2 2 0 0 1 2 2.5L20 14"></path>
+      <path d="M4 14v4a2 2 0 0 0 2 2h3l2-3h2l2 3h3a2 2 0 0 0 2-2v-4"></path>
+      <line x1="9" y1="14" x2="15" y2="14"></line>
+    </svg>
+  );
+}
+
+function LaptopIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+      <line x1="2" y1="20" x2="22" y2="20"></line>
+    </svg>
+  );
+}
+
+function BarricadeIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="19" x2="20" y2="19"></line>
+      <path d="M4 15h16"></path>
+      <path d="M8 19V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"></path>
+      <line x1="4" y1="11" x2="20" y2="11"></line>
+    </svg>
+  );
+}
+
+function BuildingIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18"></path>
+      <path d="M9 8h1"></path>
+      <path d="M9 12h1"></path>
+      <path d="M14 8h1"></path>
+      <path d="M14 12h1"></path>
+      <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+    </svg>
+  );
+}
+
+function FolderIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      <line x1="9" y1="14" x2="15" y2="14"></line>
+    </svg>
+  );
+}
+
+function WebVrIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      <line x1="2" y1="12" x2="22" y2="12"></line>
+    </svg>
+  );
+}
+
 const projects = [
   {
     number: '01',
@@ -110,6 +172,15 @@ const projects = [
     color: '#0284c7',
     isOral: true,
     iconComponent: EducationIcon
+  },
+  {
+    number: '05',
+    title: 'E-Practical and Immersive technology (A/VR) Learning Package',
+    desc: 'Initiative driven by Polytechnics & ITE (POLITE) Education Technology Committee',
+    tag: 'Education & VR/AR',
+    color: '#ea580c',
+    isPolite: true,
+    iconComponent: VrHeadsetIcon
   }
 ];
 
@@ -776,6 +847,109 @@ export default function ProjectDetail() {
                           <img src="/bartley_logo.png" alt="Bartley Secondary School" className="oral-partner-logo-img" />
                           <span className="oral-partner-logo-name">Bartley Secondary School</span>
                         </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {isExpanded && proj.isPolite && (
+                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="arast-divider"></div>
+                  
+                  <div className="arast-container">
+                    <h2 className="arast-main-title">Project Overview</h2>
+                    <p className="arast-paragraph polite-subtitle">
+                      Initiative driven by Polytechnics & ITE (POLITE) Education Technology Committee to provide:
+                    </p>
+
+                    <div className="polite-layout-grid">
+                      {/* Left Column: Features */}
+                      <div className="polite-features-column">
+                        
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <VrHeadsetIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Adaptive (e-practical or immersive) learning contents that are industry relevant
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--violet">
+                          <div className="polite-feature-card-icon">
+                            <LaptopIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Online (or HBL) learning resources for skills acquisition through a combination of simulations or hybrid learning
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <BarricadeIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Work-based, scenario-based or situation-based form of learning to train critical thinking, creative and problem-solving skills
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--violet">
+                          <div className="polite-feature-card-icon">
+                            <BookOpenIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            TP is responsible for developing learning packages in the domain of Workplace Safety
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <BuildingIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            The package will benefit around 1500 students across 5 polytechnics
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--violet">
+                          <div className="polite-feature-card-icon">
+                            <FolderIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            4 topics identified and developed by TP: Ladder Safety, Fire Hazard Check, Fire Safety Equipment Visual Check & Hazard Identification
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <WebVrIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            The package can be accessed via a web browser and Head Mounted Device e.g., Oculus
+                          </p>
+                        </div>
+
+                      </div>
+
+                      {/* Right Column: Images */}
+                      <div className="polite-images-column">
+                        <img 
+                          src="/polite_vr_corridor.png" 
+                          alt="VR Corridor simulation" 
+                          className="polite-vr-image" 
+                        />
+                        <img 
+                          src="/polite_vr_fire.png" 
+                          alt="VR Fire extinguisher simulation" 
+                          className="polite-vr-image" 
+                        />
+                        <img 
+                          src="/polite_vr_ladder.png" 
+                          alt="VR Ladder safety simulation" 
+                          className="polite-vr-image" 
+                        />
                       </div>
                     </div>
 
