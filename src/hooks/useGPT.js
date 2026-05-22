@@ -27,7 +27,14 @@ export function useGPT() {
       body: formData,
     });
 
-    if (!res.ok) throw new Error("STT request failed");
+    if (!res.ok) {
+      let errText = "STT request failed";
+      try {
+        const errData = await res.json();
+        errText = errData.error || errData.detail || errText;
+      } catch (e) {}
+      throw new Error(errText);
+    }
 
     const data = await res.json();
     return data.transcript;

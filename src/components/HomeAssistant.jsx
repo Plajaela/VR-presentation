@@ -317,7 +317,7 @@ export default function HomeAssistant() {
         } catch (err) {
           console.error("STT error:", err);
           setIsThinking(false);
-          setAiResponseText("Sorry, transcription failed. Please try again.");
+          setAiResponseText(`Error: ${err.message || "Transcription failed"}`);
         }
       };
 
