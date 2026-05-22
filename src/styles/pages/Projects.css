@@ -927,44 +927,15 @@
 
 /* CGH Partner Logo */
 .cgh-logo-wrapper {
-  background: rgba(255, 255, 255, 0.8);
-  padding: 6px 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: transparent;
   display: flex;
   align-items: center;
 }
 
-.cgh-logo-content {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.cgh-logo-svg {
-  flex-shrink: 0;
-}
-
-.cgh-logo-text-container {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.cgh-text-primary {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: #005a9c;
-  line-height: 1.2;
-}
-
-.cgh-text-secondary {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #ff7900;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+.cgh-partner-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* MRI Media & Responsive Adaptations */
@@ -1258,5 +1229,221 @@
 @media (max-width: 600px) {
   .polite-images-column {
     height: 220px;
+  }
+}
+
+/* ============================
+   Roleplay Project Custom Styles
+   ============================ */
+.roleplay-top-section {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.roleplay-avatar-container {
+  flex: 0 0 40%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #f0f0f0;
+}
+
+.roleplay-avatar-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.roleplay-top-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.roleplay-mid-text {
+  margin-bottom: 1.5rem;
+}
+
+.roleplay-divider-teal {
+  background: linear-gradient(90deg, var(--accent-teal), transparent);
+  height: 2px;
+  opacity: 0.3;
+}
+
+.roleplay-footer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.roleplay-logo-wrapper {
+  background: transparent;
+}
+
+.roleplay-partner-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .roleplay-top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+  .roleplay-avatar-container {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+/* ============================
+   Patient Safety Project Custom Styles
+   ============================ */
+.safety-top-section {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.safety-media-container {
+  flex: 0 0 45%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #f0f0f0;
+}
+
+.safety-media-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.safety-top-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.safety-divider {
+  background: linear-gradient(90deg, transparent, var(--accent-teal), transparent);
+  height: 2px;
+  opacity: 0.2;
+  margin: 1.75rem 0;
+}
+
+.safety-mid-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.safety-center-text {
+  text-align: center;
+  max-width: 750px;
+}
+
+.safety-icons-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 600px;
+  gap: 1.5rem;
+}
+
+.safety-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.safety-icon-badge {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.safety-icon-item--teal .safety-icon-badge {
+  background: rgba(20, 184, 166, 0.1);
+  color: var(--accent-teal);
+}
+
+.safety-icon-item--violet .safety-icon-badge {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent-violet);
+}
+
+.safety-svg-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.safety-icon-label {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.safety-icon-item--teal .safety-icon-label {
+  color: var(--accent-teal);
+}
+
+.safety-icon-item--violet .safety-icon-label {
+  color: var(--accent-violet);
+}
+
+.safety-bottom-section {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.safety-bottom-text {
+  flex: 1;
+}
+
+.safety-bottom-media {
+  flex: 0 0 42%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #f0f0f0;
+}
+
+@media (max-width: 800px) {
+  .safety-top-section, .safety-bottom-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .safety-media-container, .safety-bottom-media {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .safety-icons-row {
+    flex-direction: column;
+    gap: 3rem;
   }
 }

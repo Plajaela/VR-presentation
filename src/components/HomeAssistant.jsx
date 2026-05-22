@@ -213,9 +213,17 @@ export default function HomeAssistant() {
         audio: true
       });
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm"
-      });
+      // Detect supported mimeType (Safari doesn't support audio/webm)
+      const SUPPORTED_TYPES = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+        "audio/ogg",
+      ];
+      const mimeType = SUPPORTED_TYPES.find(t => MediaRecorder.isTypeSupported(t)) || "";
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
 
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -289,11 +297,17 @@ export default function HomeAssistant() {
         stream.getTracks().forEach(track => track.stop());
         setIsListening(false);
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const actualMime = mediaRecorder.mimeType || mimeType || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMime });
+
+        // Pick filename extension based on actual mime type
+        const ext = actualMime.includes("mp4") ? "mp4"
+          : actualMime.includes("ogg") ? "ogg"
+          : "webm";
 
         setIsThinking(true);
         try {
-          const transcript = await transcribeAudio(audioBlob);
+          const transcript = await transcribeAudio(audioBlob, ext);
           if (transcript?.trim()) {
             await sendMessage(transcript.trim());
           } else {

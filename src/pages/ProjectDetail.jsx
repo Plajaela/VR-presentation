@@ -136,6 +136,109 @@ function WebVrIcon({ className }) {
   );
 }
 
+function RoleplayIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+  );
+}
+
+function ChatPlusIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      <line x1="12" y1="7" x2="12" y2="13"></line>
+      <line x1="9" y1="10" x2="15" y2="10"></line>
+    </svg>
+  );
+}
+
+function FaceSmileIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    </svg>
+  );
+}
+
+function MapPinIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  );
+}
+
+function FaceScanIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+      <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+      <path d="M9 9h.01"></path>
+      <path d="M15 9h.01"></path>
+      <path d="M12 15h.01"></path>
+    </svg>
+  );
+}
+
+function LineChartIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+    </svg>
+  );
+}
+
+function SafetyVrIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      <line x1="12" y1="8" x2="12" y2="16"></line>
+      <line x1="8" y1="12" x2="16" y2="12"></line>
+    </svg>
+  );
+}
+
+function SkillsIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+      <path d="M12 5v14"></path>
+    </svg>
+  );
+}
+
+function KnowledgeIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+      <line x1="4" y1="6" x2="20" y2="6"></line>
+      <line x1="4" y1="18" x2="20" y2="18"></line>
+    </svg>
+  );
+}
+
+function AttitudesIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="8" y1="15" x2="16" y2="15"></line>
+      <line x1="9" y1="9" x2="9.01" y2="9"></line>
+      <line x1="15" y1="9" x2="15.01" y2="9"></line>
+    </svg>
+  );
+}
+
 const projects = [
   {
     number: '01',
@@ -181,6 +284,24 @@ const projects = [
     color: '#ea580c',
     isPolite: true,
     iconComponent: VrHeadsetIcon
+  },
+  {
+    number: '06',
+    title: 'Immersive Role-play: Role-Play Authoring and AI-Assisted Assessment',
+    desc: 'A role-play authoring and management platform providing a cost-effective alternative to face-to-face training',
+    tag: 'Training & AI',
+    color: '#db2777',
+    isRoleplay: true,
+    iconComponent: RoleplayIcon
+  },
+  {
+    number: '07',
+    title: 'Patient Safety Training: Use of VR to Inculcate The Concept of Patient Safety in the Emergency Department',
+    desc: 'Immersive virtual emergency department to impart patient safety education to junior doctors',
+    tag: 'Healthcare & VR',
+    color: '#14b8a6',
+    isSafetyVR: true,
+    iconComponent: SafetyVrIcon
   }
 ];
 
@@ -734,19 +855,11 @@ export default function ProjectDetail() {
                     <div className="arast-branding-footer">
                       <span className="arast-brand-label">Brand partnered with</span>
                       <div className="cgh-logo-wrapper">
-                        <div className="cgh-logo-content">
-                          <svg width="22" height="22" viewBox="0 0 100 100" fill="none" className="cgh-logo-svg">
-                            <rect x="38" y="15" width="24" height="70" fill="#005A9C" rx="2" />
-                            <rect x="15" y="38" width="70" height="24" fill="#005A9C" rx="2" />
-                            <rect x="42" y="19" width="16" height="62" fill="#FFF" rx="1" />
-                            <rect x="19" y="42" width="62" height="16" fill="#FFF" rx="1" />
-                            <circle cx="50" cy="50" r="10" fill="#FF7900" />
-                          </svg>
-                          <div className="cgh-logo-text-container">
-                            <span className="cgh-text-primary">Changi General Hospital</span>
-                            <span className="cgh-text-secondary">SingHealth</span>
-                          </div>
-                        </div>
+                        <img 
+                          src="/cgh_logo.png" 
+                          alt="Changi General Hospital SingHealth" 
+                          className="cgh-partner-logo-img" 
+                        />
                       </div>
                     </div>
 
@@ -940,6 +1053,213 @@ export default function ProjectDetail() {
                           alt="VR simulations overview" 
                           className="polite-vr-image" 
                         />
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {isExpanded && proj.isRoleplay && (
+                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="arast-divider"></div>
+                  
+                  <div className="arast-container">
+                    <h2 className="arast-main-title">Project Overview</h2>
+
+                    {/* Section 1: Top Overview (Image left, text right) */}
+                    <div className="roleplay-top-section">
+                      <div className="roleplay-avatar-container">
+                        <img 
+                          src="/roleplay_avatar.png" 
+                          alt="Virtual Role-play Avatar" 
+                          className="roleplay-avatar-img" 
+                        />
+                      </div>
+                      <div className="roleplay-top-text">
+                        <p className="arast-paragraph">
+                          In a large class, traditional role-playing can be challenging to implement. In industry settings, a role-play exercise for specific training can take up considerable time to set up.
+                        </p>
+                        <p className="arast-paragraph">
+                          This project attempts to solve the problem by providing a cost-effective alternative to "face-to-face" role-play training using an application that can run on multiple devices.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Section 2: Middle Text */}
+                    <p className="arast-paragraph roleplay-mid-text">
+                      The project proposes a role-play authoring and management platform. The platform enables the creation of customised immersive role-play content using a framework that allows for dynamic content and can also be used to modify the application after launch, reducing development and maintenance costs. The platform allows the domain expert to easily:
+                    </p>
+
+                    <div className="arast-divider-sub roleplay-divider-teal"></div>
+
+                    {/* Section 3: Features & Mockup (Reusing polite-layout-grid) */}
+                    <div className="polite-layout-grid">
+                      {/* Left Column: Features */}
+                      <div className="polite-features-column">
+                        
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <ChatPlusIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Create conversation intent
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--violet">
+                          <div className="polite-feature-card-icon">
+                            <FaceSmileIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Choose from a range of role-play avatars & animations
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <MapPinIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Choose from a range of role-play environments
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--violet">
+                          <div className="polite-feature-card-icon">
+                            <FaceScanIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            State-of-the-art technologies that can analyse learner facial expressions, speech emotions and language sentiments
+                          </p>
+                        </div>
+
+                        <div className="polite-feature-card polite-feature-card--teal">
+                          <div className="polite-feature-card-icon">
+                            <LineChartIcon className="polite-icon-svg" />
+                          </div>
+                          <p className="polite-feature-card-text">
+                            Analyse effectiveness of training
+                          </p>
+                        </div>
+
+                      </div>
+
+                      {/* Right Column: Image */}
+                      <div className="polite-images-column">
+                        <img 
+                          src="/roleplay_mockup.png" 
+                          alt="Roleplay Dashboard Mockup" 
+                          className="polite-vr-image" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Partner Branding Footer */}
+                    <div className="arast-branding-footer roleplay-footer">
+                      <span className="arast-brand-label">Brand partnered with</span>
+                      <div className="roleplay-logo-wrapper">
+                        <img src="/jma_logo.png" alt="JMA Research" className="roleplay-partner-logo-img" />
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {isExpanded && proj.isSafetyVR && (
+                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="arast-divider"></div>
+                  
+                  <div className="arast-container">
+                    <h2 className="arast-main-title">Project Overview</h2>
+
+                    {/* Section 1: Top Overview */}
+                    <div className="safety-top-section">
+                      <div className="safety-media-container">
+                        <img 
+                          src="/patient_safety_sim.png" 
+                          alt="Virtual Emergency Department Simulation" 
+                          className="safety-media-img" 
+                        />
+                      </div>
+                      <div className="safety-top-text">
+                        <p className="arast-paragraph">
+                          Doctors reprise their role in an immersive virtual emergency department treating patients like they do in their everyday practice. The hidden agenda of the game was to impart patient safety education to junior doctors.
+                        </p>
+                        <p className="arast-paragraph">
+                          Gamification helps in driving home a serious topic and increase retention through a fun and safe environment.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="arast-divider-sub safety-divider"></div>
+
+                    {/* Section 2: Middle Icons Row */}
+                    <div className="safety-mid-section">
+                      <p className="arast-paragraph safety-center-text">
+                        A collaboration between Changi General Hospital and Temasek Polytechnic, this project aims to institute specific behavioural changes in junior doctors in terms of:
+                      </p>
+
+                      <div className="safety-icons-row">
+                        <div className="safety-icon-item safety-icon-item--teal">
+                          <div className="safety-icon-badge">
+                            <SkillsIcon className="safety-svg-icon" />
+                          </div>
+                          <span className="safety-icon-label">Skills</span>
+                        </div>
+
+                        <div className="safety-icon-item safety-icon-item--violet">
+                          <div className="safety-icon-badge">
+                            <KnowledgeIcon className="safety-svg-icon" />
+                          </div>
+                          <span className="safety-icon-label">Knowledge</span>
+                        </div>
+
+                        <div className="safety-icon-item safety-icon-item--teal">
+                          <div className="safety-icon-badge">
+                            <AttitudesIcon className="safety-svg-icon" />
+                          </div>
+                          <span className="safety-icon-label">Attitudes</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="arast-divider-sub safety-divider"></div>
+
+                    {/* Section 3: Bottom layout */}
+                    <div className="safety-bottom-section">
+                      <div className="safety-bottom-text">
+                        <p className="arast-paragraph">
+                          The virtual environment has the potential to be used by large numbers of trainees without budgeting extra costs for instructors or simulated patients. Scheduling of shift workers will also be simplified as the learning can be done at their own time. This translates to savings in manpower and resources.
+                        </p>
+                      </div>
+                      <div className="safety-bottom-media">
+                        <img 
+                          src="/patient_safety_trainees.png" 
+                          alt="Trainees using VR headsets" 
+                          className="safety-media-img" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Partner Branding Footer */}
+                    <div className="arast-branding-footer">
+                      <span className="arast-brand-label">Brand partnered with</span>
+                      <div className="cgh-logo-wrapper">
+                        <div className="cgh-logo-content">
+                          <svg width="22" height="22" viewBox="0 0 100 100" fill="none" className="cgh-logo-svg">
+                            <rect x="38" y="15" width="24" height="70" fill="#005A9C" rx="2" />
+                            <rect x="15" y="38" width="70" height="24" fill="#005A9C" rx="2" />
+                            <rect x="42" y="19" width="16" height="62" fill="#FFF" rx="1" />
+                            <rect x="19" y="42" width="62" height="16" fill="#FFF" rx="1" />
+                            <circle cx="50" cy="50" r="10" fill="#FF7900" />
+                          </svg>
+                          <div className="cgh-logo-text-container">
+                            <span className="cgh-text-primary">Changi General Hospital</span>
+                            <span className="cgh-text-secondary">SingHealth</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

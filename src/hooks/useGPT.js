@@ -18,9 +18,9 @@ export function useGPT() {
     }
   };
 
-  const transcribeAudio = async (audioBlob) => {
+  const transcribeAudio = async (audioBlob, ext = "webm") => {
     const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.webm");
+    formData.append("audio", audioBlob, `recording.${ext}`);
 
     const res = await fetch("/api/stt", {
       method: "POST",
