@@ -4,37 +4,47 @@ import CharacterViewer from './CharacterViewer';
 import { useGPT } from '../hooks/useGPT';
 import '../styles/components/HomeAssistant.css';
 
-// Updated System Instructions — Strict ETC-only assistant
 const SYSTEM_INSTRUCTIONS = `You are an assistant for the Enabling Technology Collaboratory (ETC) at Temasek Polytechnic (TP), Singapore. Your ONLY role is to answer questions related to ETC.
 
 ## What you can answer:
 - ETC's mission and overview
 - Core technology areas: AI/Machine Learning, IoT, Immersive Media
-- ETC's research projects (e.g. AI-Assisted Immersive Role-play Platform, TPEBot, IVAM game, VR/AR learning modules, etc.)
-- Industry partners (e.g. AWS, Changi General Hospital, Tan Tock Seng Hospital, etc.)
+- ETC's research projects (details below)
+- Industry partners (e.g. AWS, Certis, CGH, TTSH, JMA Research, etc.)
 - ETC team members and contact details
 - Location: West Wing Block 20, Level 3, Temasek Polytechnic, 21 Tampines Ave 1, Singapore 529757
 - Contact: Tan_cheng_khoon@tp.edu.sg | 6780 5585
 - Office hours: 8.30am–6.00pm, Mon–Fri (Closed Sat, Sun & Public Holidays)
 
+## Detailed ETC Project Information:
+When asked to describe, summarize, or list our projects, refer to these 8 projects:
+1. **Augmented Reality Application for Security Training (ARAST)**: Co-funded by SSG, partnered with Certis. Utilises image target tracking to simulate security incidents (Fire, Improvised explosive device, Break-In, Suspicious Person, Bag Search). Equipped with a real-time analytics dashboard to monitor training, identify errors, and track competencies.
+2. **Automated Risk Assessment (ARA)**: A safety & AI project aiming to streamline workplace risk assessments using automated hazard identification and mitigation. Accepts workplace images to auto-generate preliminary Risk Assessment (RA) forms, categorizes hazards based on Ministry of Manpower (MOM) classifications, and offers an archive system.
+3. **Pre-Procedure Evaluation System for MRI**: A healthcare & VR project co-funded by Temasek Polytechnic Research Fund (TPRF) and partnered with CGH. Simulates in-bore MRI scanning processes using VR to acclimatise claustrophobic/anxious patients. Collects bed mat pressure distribution, vitals, and camera data to establish an evaluation score.
+4. **Virtual Practice Environment for Oral Exam Preparation**: An education & AI project partnered with Dunman Secondary School and Bartley Secondary School. Enables voice-to-text, LLM, and text-to-voice interactive preparation where an AI simulates a teacher. Teachers can upload visual stimuli, exam rubrics, and review AI feedback.
+5. **E-Practical and Immersive technology (A/VR) Learning Package**: Education & VR/AR initiative driven by the POLITE Committee. TP developed 4 workplace safety topics: Ladder Safety, Fire Hazard Check, Fire Safety Equipment Visual Check, and Hazard Identification. Accessible via web and Oculus, benefiting ~1500 students across 5 polytechnics.
+6. **Immersive Role-play: Role-Play Authoring and AI-Assisted Assessment**: A training & AI project partnered with JMA Research. Multi-device application providing cost-effective alternative to face-to-face roleplays. Allows domain experts to customize conversation intents, select avatars, choose environments, and analyze facial expressions, speech emotions, and language sentiments.
+7. **Patient Safety Training (Emergency Dept)**: Healthcare & VR project partnered with Changi General Hospital (CGH). A gamified emergency department simulation to impart serious patient safety education (Skills, Knowledge, Attitudes) to junior doctors in a fun, safe environment without extra instructor costs.
+8. **Featured Demo (Smart Wheelchair)**: A live demo project highlighting smart mobility. Integrates LiDAR sensors and Computer Vision (CV) algorithms onto standard motorized wheelchairs. Detects obstacles in real-time and corrects the path gently to prevent collisions while keeping user autonomy.
+
 ## Strict rules:
 1. Allow casual greetings (e.g. "Hi", "Hello", "Good morning") and pleasantries/thanks (e.g. "Thank you"). Respond to these warmly and introduce yourself as the ETC Assistant, then ask how you can help them learn about ETC today.
-2. If the question is NOT related to ETC or Temasek Polytechnic's ETC centre, politely refuse and steer the conversation back to ETC. For example, you can say something like "I'm sorry, but I can only answer questions related to ETC. Shall we learn more about what ETC does instead? Feel free to ask me anything about ETC!" (Translate the sentiment to the language the user is speaking). Always end the refusal with a welcoming prompt to ask about ETC.
+2. If the question is NOT related to ETC or Temasek Polytechnic's ETC centre, politely refuse and steer the conversation back to ETC. Always end the refusal with a welcoming prompt to ask about ETC.
 3. Do NOT answer general knowledge questions (e.g. math, science, current events).
 4. Do NOT make up information. If you don't know, say: "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585."
 5. Always stay on-topic. Never break character.
-5. YOU MUST SPEAK IN ENGLISH ONLY.
+6. YOU MUST SPEAK IN ENGLISH ONLY.
 
 ## CRITICAL INSTRUCTION FOR NAVIGATION:
 If the user asks to see, go to, or learn about a specific topic/page, you MUST provide a brief summary of that topic, AND THEN append a navigation tag at the VERY END of your response to bring them there.
-- For About Us or Introduction: Summarize ETC's mission and core technologies. Append [NAV_/Introduction]
-- For Partners or Ecosystem: Mention some key partners we collaborate with. Append [NAV_/OurPartners]
-- For Projects, Portfolio, or Demos: Briefly mention a couple of key projects (e.g. AI Role-play, VR Patient Safety). Append [NAV_/OurProjects]
+- For About Us or Introduction: Append [NAV_/Introduction]
+- For Partners or Ecosystem: Append [NAV_/OurPartners]
+- For Projects list or Portfolio: Append [NAV_/OurProjects]
+- For Specific details of Projects 1-7: Append [NAV_/OurProjects/ProjectDetail]
+- For the Smart Wheelchair / Live Demo: Append [NAV_/OurProjects/DemoProject]
 - For Home page: Append [NAV_/Home]
 Append the navigation tag as the absolute last characters of your response, with nothing after it — no punctuation, no spaces, no words.
-Bad:  "Let's go! [NAV_/OurPartners] sometime"
-Good: "Let's learn more about our partners! [NAV_/OurPartners]"
-Example: "Here is our Introduction. ETC is a multi-disciplinary centre integrating AI, IoT, and Immersive Media to help industries innovate. Let's head there now! [NAV_/Introduction]"`;
+Example: "We have multiple projects like ARAST and ARA. Let's see the portfolio! [NAV_/OurProjects/ProjectDetail]"`;
 
 export default function HomeAssistant() {
   const navigate = useNavigate();
@@ -60,6 +70,14 @@ export default function HomeAssistant() {
   const pendingNavRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const [activeProject, setActiveProject] = useState(null);
+  const activeProjectRef = useRef(null);
+
+  const updateActiveProject = (val) => {
+    activeProjectRef.current = val;
+    setActiveProject(val);
+  };
+  const speakTimeoutRef = useRef(null);
 
   // SAFARI AUDIO UNLOCK
   const audioUnlockedRef = useRef(false);
@@ -86,27 +104,20 @@ export default function HomeAssistant() {
         source.connect(ctx.destination);
 
         source.start(0);
-
-        audioUnlockedRef.current = true;
-
-        console.log("[Safari Fix] AudioContext unlocked");
-      } else {
-        // Fallback for older Safari
-        const audio = new Audio(
-          "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAACcQCA"
-        );
-
-        audio.volume = 0;
-
-        await audio.play();
-        audio.pause();
-
-        audioUnlockedRef.current = true;
-
-        console.log("[Safari Fix] HTMLAudio unlocked");
       }
+
+      // ALWAYS unlock HTMLAudioElement as well, because avatar-model uses `new Audio().play()`
+      const audio = new Audio(
+        "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAACcQCA"
+      );
+      audio.volume = 0;
+      await audio.play();
+      audio.pause();
+
+      audioUnlockedRef.current = true;
+      console.log("Audio unlocked successfully");
     } catch (err) {
-      console.warn("[Safari Fix] Audio unlock failed:", err);
+      console.log("Audio unlock failed or not needed", err);
     }
   };
 
@@ -132,23 +143,130 @@ export default function HomeAssistant() {
     }
   }, [revealData, navigate]);
 
+  // --- Listen to external triggers to explain a project ---
+  useEffect(() => {
+    const handleExplainProject = (e) => {
+      const { projectName, projectTitle, customPrompt } = e.detail;
+      
+      updateActiveProject(projectName);
+      
+      // Clear any previous speaking timer
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
+
+      // Broadcast thinking state for this project and cache it globally
+      window.currentAvatarState = { projectName, status: 'thinking' };
+      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+        detail: { projectName, status: 'thinking' }
+      }));
+
+      // Auto expand the avatar if collapsed
+      setIsCollapsed(false);
+      
+      // Unlock Safari Audio context if needed
+      unlockAudio();
+
+      if (customPrompt) {
+        sendMessage(customPrompt, false);
+      } else {
+        sendMessage(`Please describe the ${projectTitle} project in detail.`, false);
+      }
+    };
+
+    window.addEventListener('avatar-explain-project', handleExplainProject);
+    return () => {
+      window.removeEventListener('avatar-explain-project', handleExplainProject);
+    };
+  }, []);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // --- Custom TTS Handler for CharacterViewer ---
   const handleTTSFetch = async (text) => {
-    const response = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, format: 'wav' })
-    });
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, format: 'wav' })
+      });
 
-    // Signal the React component that the fetch is done
-    setRevealData({ text, id: Date.now() });
+      if (!response.ok) {
+        throw new Error(`TTS server returned status ${response.status}`);
+      }
 
-    return response;
+      // Estimate duration: average 140 words per minute (about 2.3 words/sec)
+      // For English text: ~14 characters per second
+      const charCount = text.length;
+      const durationMs = Math.max(4000, (charCount / 14) * 1000);
+
+      // Clear any previous speaking timer
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+      }
+
+      // Set globally cached avatar state
+      window.currentAvatarState = { projectName: activeProjectRef.current, status: 'speaking' };
+
+      // Broadcast that we started speaking
+      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+        detail: { projectName: activeProjectRef.current, status: 'speaking', durationMs }
+      }));
+
+      // Start a self-expiring timer to transition back to idle
+      speakTimeoutRef.current = setTimeout(() => {
+        window.currentAvatarState = { projectName: null, status: 'idle' };
+        window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+          detail: { projectName: null, status: 'idle' }
+        }));
+        updateActiveProject(null);
+        speakTimeoutRef.current = null;
+      }, durationMs);
+
+      // Signal the React component that the fetch is done
+      setRevealData({ text, id: Date.now() });
+
+      return response;
+    } catch (err) {
+      console.error("TTS fetch failed in handleTTSFetch:", err);
+      setIsThinking(false);
+      
+      // Reset avatar status to idle immediately to clear spinner
+      window.currentAvatarState = { projectName: null, status: 'idle' };
+      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+        detail: { projectName: null, status: 'idle' }
+      }));
+      updateActiveProject(null);
+      
+      throw err;
+    }
   };
 
   // --- Core AI Chat Logic ---
-  const sendMessage = async (userMessage) => {
-    setTranscriptText(userMessage);
+  const sendMessage = async (userMessage, showUserBubble = true) => {
+    if (showUserBubble) {
+      setTranscriptText(userMessage);
+      // Clear active project explaining state if user types/talks themselves
+      updateActiveProject(null);
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
+      window.currentAvatarState = { projectName: null, status: 'idle' };
+      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+        detail: { projectName: null, status: 'idle' }
+      }));
+    } else {
+      setTranscriptText("");
+    }
     setAiResponseText("");
     setIsThinking(true);
     pendingNavRef.current = null;
@@ -173,6 +291,13 @@ export default function HomeAssistant() {
       if (!speakText) {
         setIsThinking(false);
         if (navTarget) navigate(navTarget);
+        
+        // Reset avatar state
+        window.currentAvatarState = { projectName: null, status: 'idle' };
+        window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+          detail: { projectName: null, status: 'idle' }
+        }));
+        updateActiveProject(null);
         return;
       }
 
@@ -190,6 +315,13 @@ export default function HomeAssistant() {
       console.error("Chat error:", e);
       setIsThinking(false);
       setAiResponseText("I'm sorry, I am having trouble connecting to my brain. Please try again.");
+      
+      // Reset avatar state
+      window.currentAvatarState = { projectName: null, status: 'idle' };
+      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
+        detail: { projectName: null, status: 'idle' }
+      }));
+      updateActiveProject(null);
     }
   };
 
@@ -404,13 +536,13 @@ export default function HomeAssistant() {
             justifyContent: 'flex-end'
           }}
         >
-          {transcriptText && !isListening && (
+          {!activeProject && transcriptText && !isListening && (
             <div className="home-assistant-bubble user-bubble">
               {transcriptText}
             </div>
           )}
 
-          {isThinking && (
+          {!activeProject && isThinking && (
             <div className="home-assistant-bubble ai-bubble thinking">
               <div className="typing-dot" style={{ animationDelay: '0s' }}></div>
               <div className="typing-dot" style={{ animationDelay: '0.2s' }}></div>
@@ -418,7 +550,7 @@ export default function HomeAssistant() {
             </div>
           )}
 
-          {aiResponseText && !isThinking && (
+          {!activeProject && aiResponseText && !isThinking && (
             <div className="home-assistant-bubble ai-bubble">
               {aiResponseText}
             </div>
@@ -456,7 +588,7 @@ export default function HomeAssistant() {
           </form>
 
           {isListening && <div className="home-assistant-status">Listening...</div>}
-          {isThinking && <div className="home-assistant-status thinking">Thinking...</div>}
+          {!activeProject && isThinking && <div className="home-assistant-status thinking">Thinking...</div>}
         </div>
       </div>
     </>

@@ -2,10 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import { createAvatarScene } from 'avatar-model';
 import '../styles/components/CharacterViewer.css';
 
+import { useState } from 'react';
+
 function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelScale, modelPosition, cameraPosition }) {
   const canvasRef = useRef(null);
   const destroyRef = useRef(null);
-  const controllerRef = useRef(null);
+  const [controller, setController] = useState(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,7 +17,7 @@ function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelS
 
     (async () => {
       try {
-        const { controller, destroy } = await createAvatarScene(canvas, {
+        const { controller: avatarController, destroy } = await createAvatarScene(canvas, {
           modelUrl: modelPath,
           audioUrl: audioURL,
           script,
@@ -31,7 +33,7 @@ function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelS
           return;
         }
 
-        controllerRef.current = controller;
+        setController(avatarController);
         destroyRef.current = destroy;
       } catch (err) {
         console.error('[CharacterViewer] Failed to init avatar:', err);
@@ -42,15 +44,15 @@ function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelS
       cancelled = true;
       destroyRef.current?.();
       destroyRef.current = null;
-      controllerRef.current = null;
+      setController(null);
     };
   }, [modelPath]);
 
   useEffect(() => {
-    if (controllerRef.current && script) {
-      controllerRef.current.speak(script); 
+    if (controller && script) {
+      controller.speak(script); 
     }
-  }, [script]);
+  }, [controller, script]);
 
   return <canvas ref={canvasRef} className="avatar-canvas" />;
 }

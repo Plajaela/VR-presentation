@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/Projects.css';
@@ -308,6 +308,21 @@ const projects = [
 export default function ProjectDetail() {
   const navigate = useNavigate();
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [avatarState, setAvatarState] = useState(() => {
+    return window.currentAvatarState || { projectName: null, status: 'idle' };
+  });
+
+  useEffect(() => {
+    const handleBroadcast = (e) => {
+      const { projectName, status } = e.detail;
+      setAvatarState({ projectName, status });
+    };
+
+    window.addEventListener('avatar-status-broadcast', handleBroadcast);
+    return () => {
+      window.removeEventListener('avatar-status-broadcast', handleBroadcast);
+    };
+  }, []);
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -391,11 +406,40 @@ export default function ProjectDetail() {
               </div>
 
               {isExpanded && proj.isArast && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'ARAST',
+                            projectTitle: 'Augmented Reality Application for Security Training (ARAST)',
+                            customPrompt: 'Explain the Augmented Reality Application for Security Training (ARAST) project in detail. It is co-funded by SSG and partnered with Certis. It uses image target tracking to simulate security incidents such as fires, improvised explosive devices (IEDs), break-ins, suspicious persons, and bag searches. Trainees can interact with augmented 3D objects like suspicious packages. It also features a real-time analytics dashboard to monitor training completion, identify frequent errors, and track competencies, supplementing basic WSQ security module training.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'ARAST' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'ARAST' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'ARAST' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'ARAST' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: AR Fire Simulation & Incident Types */}
                     <div className="arast-section">
@@ -573,11 +617,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isAra && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn avatar-explain-btn--violet"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'ARA',
+                            projectTitle: 'Automated Risk Assessment (ARA)',
+                            customPrompt: 'Explain the Automated Risk Assessment (ARA) project in detail. This safety and AI initiative aims to streamline workplace risk assessments by accepting workplace photos and automatically generating draft Risk Assessment (RA) forms. It identifies and categorizes hazards based on Ministry of Manpower (MOM) classifications, allowing users to review, refine, and archive the forms, which helps analyze hazard trends.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'ARA' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'ARA' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'ARA' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'ARA' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: Intro & System value propositions */}
                     <div className="arast-section">
@@ -727,11 +800,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isMri && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'MRI',
+                            projectTitle: 'Pre-Procedure Evaluation System for MRI',
+                            customPrompt: 'Explain the Pre-Procedure Evaluation System for MRI in detail. Co-funded by the Temasek Polytechnic Research Fund (TPRF) and partnered with Changi General Hospital (CGH), this healthcare project aims to reduce aborted MRI scans. It uses a VR prototype to acclimatise claustrophobic or anxious patients, collecting metrics like bed mat pressure distribution, patient vitals, and camera tracking to compute a suitability evaluation score.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'MRI' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'MRI' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'MRI' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'MRI' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: Intro Text with Team Image */}
                     <div className="arast-section">
@@ -868,11 +970,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isOral && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn avatar-explain-btn--violet"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'OralExam',
+                            projectTitle: 'Virtual Practice Environment for Oral Exam Preparation',
+                            customPrompt: 'Explain the Virtual Practice Environment for Oral Exam Preparation in detail. Partnered with Dunman Secondary School and Bartley Secondary School, this education initiative uses voice-to-text, large language models (LLM), and text-to-voice where an AI acts as a teacher to let students practice interactive oral exams. Teachers can upload visual stimuli, exam rubrics, and access AI-generated feedback and assessments of student performance.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'OralExam' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'OralExam' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'OralExam' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'OralExam' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: Overview and main illustration */}
                     <div className="oral-overview-section">
@@ -968,11 +1099,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isPolite && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'PolitePackage',
+                            projectTitle: 'E-Practical and Immersive Technology (A/VR) Learning Package',
+                            customPrompt: 'Explain the E-Practical and Immersive Technology Learning Package in detail. Driven by the POLITE Education Technology Committee across Singapore Poly, Ngee Ann Poly, Republic Poly, Nanyang Poly, and Temasek Poly, it covers 4 workplace safety topics: Ladder Safety, Fire Hazard Check, Fire Safety Equipment Visual Check, and Hazard Identification. Accessible via WebVR and Oculus Quest, it serves approximately 1500 students annually across the 5 polytechnics.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'PolitePackage' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'PolitePackage' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'PolitePackage' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'PolitePackage' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
                     <p className="arast-paragraph polite-subtitle">
                       Initiative driven by Polytechnics & ITE (POLITE) Education Technology Committee to provide:
                     </p>
@@ -1061,11 +1221,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isRoleplay && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn avatar-explain-btn--violet"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'Roleplay',
+                            projectTitle: 'Immersive Role-play: Role-Play Authoring and AI-Assisted Assessment',
+                            customPrompt: 'Explain the Immersive Role-play and AI-Assisted Assessment project in detail. Partnered with JMA Research, this multi-device application provides a cost-effective alternative to face-to-face roleplays. It enables domain experts to easily customize conversation intents, select avatars and animations, and choose role-play environments. It uses AI to analyze student facial expressions, speech emotions, language sentiments, and training effectiveness.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'Roleplay' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'Roleplay' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'Roleplay' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'Roleplay' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: Top Overview (Image left, text right) */}
                     <div className="roleplay-top-section">
@@ -1168,11 +1357,40 @@ export default function ProjectDetail() {
               )}
 
               {isExpanded && proj.isSafetyVR && (
-                <div className="arast-expanded-content" onClick={(e) => e.stopPropagation()}>
+                <div className="arast-expanded-content" >
                   <div className="arast-divider"></div>
                   
                   <div className="arast-container">
                     <h2 className="arast-main-title">Project Overview</h2>
+                    <button 
+                      className="avatar-explain-btn"
+                      onClick={(e) => {
+                        window.dispatchEvent(new CustomEvent('avatar-explain-project', {
+                          detail: {
+                            projectName: 'SafetyVR',
+                            projectTitle: 'Patient Safety Training: Use of VR in the Emergency Department',
+                            customPrompt: 'Explain the Patient Safety Training VR project in detail. Partnered with Changi General Hospital (CGH), this healthcare VR simulation creates a gamified virtual emergency department to train junior doctors in critical patient safety elements: Skills, Knowledge, and Attitudes. It allows learning in a fun, risk-free environment without requiring high-cost instructors.'
+                          }
+                        }));
+                      }}
+                    >
+                      {avatarState.projectName === 'SafetyVR' && avatarState.status === 'thinking' ? (
+                        <span className="speaker-thinking" style={{ marginRight: '6px' }} />
+                      ) : avatarState.projectName === 'SafetyVR' && avatarState.status === 'speaking' ? (
+                        <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                          <span className="speaker-bar"></span>
+                        </div>
+                      ) : (
+                        <span className="avatar-explain-btn-sparkle">✨</span>
+                      )}
+                      {avatarState.projectName === 'SafetyVR' && avatarState.status === 'speaking'
+                        ? 'Avatar Explaining...'
+                        : avatarState.projectName === 'SafetyVR' && avatarState.status === 'thinking'
+                        ? 'Avatar Thinking...'
+                        : 'Listen to Avatar Explain'}
+                    </button>
 
                     {/* Section 1: Top Overview */}
                     <div className="safety-top-section">
