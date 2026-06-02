@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import AvatarExplainButton from '../components/AvatarExplainButton';
@@ -372,6 +373,25 @@ export default function ProjectDetail() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
+  useEffect(() => {
+    if (!expandedProject) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setExpandedProject(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [expandedProject]);
+
   const projectTags = useMemo(() => {
     return ['All', ...new Set(projects.map((project) => project.tag))];
   }, []);
@@ -389,6 +409,8 @@ export default function ProjectDetail() {
   const toggleExpand = (projectTitle) => {
     setExpandedProject(expandedProject === projectTitle ? null : projectTitle);
   };
+
+  const closeProjectModal = () => setExpandedProject(null);
 
   return (
     <div className="page-container animate-fade-in">
@@ -483,7 +505,7 @@ export default function ProjectDetail() {
               role="button"
               tabIndex={0}
               aria-expanded={isExpanded}
-              aria-label={`${proj.title}. ${isExpanded ? 'Collapse' : 'Expand'} project details`}
+              aria-label={`${proj.title}. ${isExpanded ? 'Close' : 'Open'} project details`}
               style={{ cursor: 'pointer' }}
             >
               {/* Left edge premium colored stripe indicator */}
@@ -542,11 +564,17 @@ export default function ProjectDetail() {
                 </div>
               </div>
 
-              {isExpanded && proj.isArast && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isArast && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -723,13 +751,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isAra && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isAra && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -878,13 +912,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isMri && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isMri && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -1020,13 +1060,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isOral && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isOral && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -1121,13 +1167,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isPolite && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isPolite && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
                     <p className="arast-paragraph polite-subtitle">
@@ -1215,13 +1267,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isRoleplay && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isRoleplay && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -1323,13 +1381,19 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
 
-              {isExpanded && proj.isSafetyVR && (
-                <div className="arast-expanded-content" >
+              {isExpanded && proj.isSafetyVR && createPortal((
+                <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
-                  <div className="arast-container">
+                  <div className="arast-container" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <h2 className="arast-main-title">Project Overview</h2>
                     <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
 
@@ -1424,7 +1488,7 @@ export default function ProjectDetail() {
 
                   </div>
                 </div>
-              )}
+              ), document.body)}
             </div>
           );
         })}

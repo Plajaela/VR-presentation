@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import CharacterViewer from './CharacterViewer';
 import { useGPT } from '../hooks/useGPT';
 import '../styles/components/HomeAssistant.css';
@@ -34,6 +34,19 @@ When asked to describe, summarize, or list our projects, refer to these 8 projec
 4. Do NOT make up information. If you don't know, say: "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585."
 5. Always stay on-topic. Never break character.
 6. YOU MUST SPEAK IN ENGLISH ONLY.
+
+## PROJECT INQUIRY ROUTING RULE (CRITICAL):
+1. If the user asks generally to "explain projects", "tell me about projects", "show me projects", "list projects", or similar:
+   - YOU MUST NOT list or describe the 8 projects immediately.
+   - Instead, explain that you are navigating them to the Projects menu where they can choose, and ask them: "Would you like to check out **Each Project** (our extensive portfolio of 7 assistive tech projects) or our featured **Demo Project** (the Smart Wheelchair)?"
+   - YOU MUST append [NAV_/OurProjects] at the very end of your response to navigate them.
+2. If the user asks to go to or view "each project", "show all projects", "portfolio", "each projects", or similar:
+   - Say: "Sure! Let's head over to the Project Portfolio where you can browse all of our individual projects."
+   - YOU MUST append [NAV_/OurProjects/ProjectDetail] at the very end of your response to navigate them.
+3. If they ask about a specific project by name (e.g. ARAST, ARA, MRI, Dunman, etc.):
+   - Explain that specific project in detail and append the appropriate direct navigation tag:
+     - For projects 1-7 (ARAST, ARA, MRI, OralExam, PolitePackage, Roleplay, SafetyVR): Append [NAV_/OurProjects/ProjectDetail]
+     - For the Smart Wheelchair / Featured Demo (Project 8): Append [NAV_/OurProjects/DemoProject]
 
 ## CRITICAL INSTRUCTION FOR NAVIGATION:
 If the user asks to see, go to, or learn about a specific topic/page, you MUST provide a brief summary of that topic, AND THEN append a navigation tag at the VERY END of your response to bring them there.
@@ -78,6 +91,7 @@ const QUICK_PROMPTS = [
 
 export default function HomeAssistant() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { fetchGPTResponse, transcribeAudio } = useGPT();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -307,6 +321,40 @@ export default function HomeAssistant() {
       window.removeEventListener('avatar-explain-project', handleExplainProject);
     };
   }, [broadcastAvatarStatus, clearSpeakTimer, sendMessage, unlockAudio, updateActiveProject]);
+
+  // Automatic voice greetings/prompts on route changes
+  const prevPathnameRef = useRef(location.pathname);
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const prevPath = prevPathnameRef.current;
+    prevPathnameRef.current = currentPath;
+
+    // Check if the user navigated to the ProjectDetail portfolio page
+    if (currentPath === '/OurProjects/ProjectDetail' && prevPath !== '/OurProjects/ProjectDetail') {
+      const explainText = "We have many projects here! If you want to know about any project, just click into that project and let me explain it for you.";
+      
+      // Make sure the assistant is expanded so they see and hear it
+      setIsCollapsed(false);
+      
+      // Stop any active speech and reset
+      resetAvatarState();
+      
+      // Set values and trigger TTS
+      setTranscriptText("");
+      setAiResponseText("");
+      setIsThinking(true);
+
+      // Play greeting after a brief delay for route transition stability
+      setTimeout(() => {
+        setLatestScript((prev) =>
+          prev === explainText
+            ? explainText + '\u200B'
+            : explainText
+        );
+      }, 500);
+    }
+  }, [location.pathname, resetAvatarState]);
 
   useEffect(() => {
     return () => {

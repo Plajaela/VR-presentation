@@ -35,21 +35,18 @@
 body {
   background-color: var(--bg-dark);
   background-image:
-    linear-gradient(rgba(31, 122, 107, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 122, 107, 0.035) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(124, 58, 237, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 18% 22%, rgba(13, 148, 136, 0.08), transparent 34%),
-    radial-gradient(circle at 84% 18%, rgba(37, 99, 235, 0.045), transparent 32%),
-    radial-gradient(circle at 78% 78%, rgba(124, 58, 237, 0.055), transparent 36%);
+    linear-gradient(rgba(31, 122, 107, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 122, 107, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 18% 22%, rgba(13, 148, 136, 0.055), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(37, 99, 235, 0.028), transparent 32%),
+    radial-gradient(circle at 78% 78%, rgba(124, 58, 237, 0.032), transparent 36%);
   background-size:
     42px 42px,
     42px 42px,
-    96px 96px,
     auto,
     auto,
     auto;
   background-position:
-    0 0,
     0 0,
     0 0,
     center,
@@ -514,7 +511,7 @@ a:hover {
     linear-gradient(62deg, transparent 0 58%, rgba(124, 58, 237, 0.055) 58.2% 58.5%, transparent 58.7% 100%);
   background-size: 180px 180px, 420px 420px, 520px 520px;
   background-position: 12px 18px, -80px -120px, 140px 80px;
-  opacity: 0.42;
+  opacity: 0.16;
   mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
 }
 
@@ -526,15 +523,15 @@ a:hover {
     linear-gradient(90deg, transparent 0 49.8%, rgba(31, 122, 107, 0.08) 50%, transparent 50.2% 100%),
     linear-gradient(0deg, transparent 0 49.8%, rgba(31, 122, 107, 0.06) 50%, transparent 50.2% 100%);
   background-size: 360px 360px;
-  opacity: 0.25;
+  opacity: 0.08;
   transform: rotate(-8deg) scale(1.12);
 }
 
 .bg-orb {
   position: absolute;
   border-radius: 32% 68% 64% 36% / 36% 42% 58% 64%;
-  filter: blur(90px);
-  opacity: 0.34;
+  filter: blur(120px);
+  opacity: 0.18;
   animation: float-orb 34s infinite ease-in-out alternate;
 }
 
