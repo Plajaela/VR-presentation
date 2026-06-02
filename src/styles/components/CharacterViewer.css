@@ -7,6 +7,12 @@
   overflow: hidden;
 }
 
+.avatar-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .character-viewer-loading {
   position: absolute;
   inset: 0;
@@ -20,6 +26,8 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
+  pointer-events: none;
+  transition: opacity var(--transition);
 }
 
 .loading-spinner {
@@ -29,6 +37,25 @@
   border-top-color: var(--accent-teal);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+.character-viewer-loading--error {
+  background: rgba(254, 242, 242, 0.9);
+  color: #991b1b;
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.character-viewer-error-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  font-weight: 800;
 }
 
 @keyframes spin {

@@ -132,6 +132,26 @@ a:hover {
   line-height: 1.5;
 }
 
+.route-fallback {
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.route-fallback-spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(31, 122, 107, 0.14);
+  border-top-color: var(--accent-teal);
+  animation: spin 0.9s linear infinite;
+}
+
 /* ============================
    GLASS CARD — Smooth & Floating
    ============================ */
@@ -249,6 +269,12 @@ a:hover {
 
   50% {
     box-shadow: 0 0 12px 3px rgba(13, 148, 136, 0.08);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

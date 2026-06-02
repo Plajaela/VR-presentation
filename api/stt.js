@@ -9,17 +9,27 @@ export const config = {
   api: { bodyParser: false },
 };
 
-const openai = new OpenAI({
-  apiKey: process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY
-});
+const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+const openai = apiKey ? new OpenAI({ apiKey }) : null;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  let renamedPath = null;
+
   try {
-    const form = formidable({ keepExtensions: true });
+    if (!openai) {
+      return res.status(503).json({
+        error: "OpenAI API key is not configured. Set OPENAI_API_KEY in .env.",
+      });
+    }
+
+    const form = formidable({
+      keepExtensions: true,
+      maxFileSize: 12 * 1024 * 1024,
+    });
     const [, files] = await form.parse(req);
     const audioFile = files.audio?.[0];
 
@@ -29,10 +39,10 @@ export default async function handler(req, res) {
 
     // Determine correct extension from the original filename uploaded
     const originalExt = path.extname(audioFile.originalFilename || "recording.webm") || ".webm";
-    const renamedPath = audioFile.filepath + originalExt;
+    renamedPath = audioFile.filepath + originalExt;
 
     // Rename the temp file to have the correct extension so Whisper recognises the format
-    fs.renameSync(audioFile.filepath, renamedPath);
+    await fs.promises.rename(audioFile.filepath, renamedPath);
 
     console.log(`[STT] Transcribing: ${renamedPath} (${audioFile.size} bytes)`);
 
@@ -41,13 +51,21 @@ export default async function handler(req, res) {
       model: "whisper-1",
     });
 
-    // Clean up renamed file
-    try { fs.unlinkSync(renamedPath); } catch (_) {}
-
-    res.status(200).json({ transcript: transcription.text });
+    res.status(200).json({ transcript: transcription.text?.trim() || "" });
 
   } catch (error) {
     console.error("STT failed:", error);
-    res.status(500).json({ error: "Internal Server Error", detail: error.message });
+    res.status(500).json({
+      error: "Unable to transcribe audio right now.",
+      detail: error.message,
+    });
+  } finally {
+    if (renamedPath) {
+      try {
+        await fs.promises.unlink(renamedPath);
+      } catch {
+        // Temp file may already be gone; no action needed.
+      }
+    }
   }
 }

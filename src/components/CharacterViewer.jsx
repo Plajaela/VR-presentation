@@ -1,27 +1,48 @@
-import React, { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createAvatarScene } from 'avatar-model';
 import '../styles/components/CharacterViewer.css';
 
-import { useState } from 'react';
-
-function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelScale, modelPosition, cameraPosition }) {
+function AvatarCanvas({
+  modelPath,
+  audioURL,
+  script,
+  ttsEndpoint,
+  button,
+  modelScale,
+  modelPosition,
+  cameraPosition,
+  section,
+}) {
   const canvasRef = useRef(null);
   const destroyRef = useRef(null);
+  const ttsEndpointRef = useRef(ttsEndpoint);
   const [controller, setController] = useState(null);
+  const [loadState, setLoadState] = useState('loading');
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    ttsEndpointRef.current = ttsEndpoint;
+  }, [ttsEndpoint]);
+
+  const proxiedTtsEndpoint = useCallback((text) => {
+    return ttsEndpointRef.current?.(text);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     let cancelled = false;
+    setLoadState('loading');
+    setLoadError('');
 
     (async () => {
       try {
         const { controller: avatarController, destroy } = await createAvatarScene(canvas, {
           modelUrl: modelPath,
           audioUrl: audioURL,
-          script,
-          ttsEndpoint,
+          script: '',
+          ttsEndpoint: ttsEndpointRef.current ? proxiedTtsEndpoint : undefined,
           button,
           modelScale,
           modelPosition,
@@ -35,8 +56,13 @@ function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelS
 
         setController(avatarController);
         destroyRef.current = destroy;
+        setLoadState('ready');
       } catch (err) {
         console.error('[CharacterViewer] Failed to init avatar:', err);
+        if (!cancelled) {
+          setLoadState('error');
+          setLoadError(err?.message || 'Unable to load the avatar model.');
+        }
       }
     })();
 
@@ -46,15 +72,31 @@ function AvatarCanvas({ modelPath, audioURL, script, ttsEndpoint, button, modelS
       destroyRef.current = null;
       setController(null);
     };
-  }, [modelPath]);
+  }, [audioURL, button, cameraPosition, modelPath, modelPosition, modelScale, proxiedTtsEndpoint]);
 
   useEffect(() => {
     if (controller && script) {
-      controller.speak(script); 
+      controller.speak(script);
     }
   }, [controller, script]);
 
-  return <canvas ref={canvasRef} className="avatar-canvas" />;
+  return (
+    <>
+      <canvas ref={canvasRef} className="avatar-canvas" aria-label={section} />
+      {loadState === 'loading' && (
+        <div className="character-viewer-loading" role="status" aria-live="polite">
+          <div className="loading-spinner" />
+          <span>Loading avatar</span>
+        </div>
+      )}
+      {loadState === 'error' && (
+        <div className="character-viewer-loading character-viewer-loading--error" role="status">
+          <span className="character-viewer-error-icon">!</span>
+          <span>{loadError}</span>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default function CharacterViewer({
@@ -79,6 +121,7 @@ export default function CharacterViewer({
         modelScale={modelScale}
         modelPosition={modelPosition}
         cameraPosition={cameraPosition}
+        section={section}
       />
     </div>
   );

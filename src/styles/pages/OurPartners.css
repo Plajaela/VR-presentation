@@ -68,11 +68,29 @@
 }
 
 /* External Partners */
+.external-partner-groups {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.external-partner-group {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.external-partner-group-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .external-partner-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem 0;
+  gap: 1rem;
 }
 
 .external-partner-card {

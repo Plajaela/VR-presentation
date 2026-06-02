@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/Projects.css';
@@ -307,10 +307,26 @@ const projects = [
 
 export default function ProjectDetail() {
   const navigate = useNavigate();
-  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [expandedProject, setExpandedProject] = useState(null);
+  const [activeTag, setActiveTag] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [avatarState, setAvatarState] = useState(() => {
     return window.currentAvatarState || { projectName: null, status: 'idle' };
   });
+
+  const projectTags = useMemo(() => {
+    return ['All', ...new Set(projects.map((project) => project.tag))];
+  }, []);
+
+  const filteredProjects = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return projects.filter((project) => {
+      const matchesTag = activeTag === 'All' || project.tag === activeTag;
+      const searchableText = `${project.title} ${project.desc} ${project.tag}`.toLowerCase();
+      return matchesTag && (!query || searchableText.includes(query));
+    });
+  }, [activeTag, searchQuery]);
 
   useEffect(() => {
     const handleBroadcast = (e) => {
@@ -324,8 +340,8 @@ export default function ProjectDetail() {
     };
   }, []);
 
-  const toggleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+  const toggleExpand = (projectTitle) => {
+    setExpandedProject(expandedProject === projectTitle ? null : projectTitle);
   };
 
   return (
@@ -338,15 +354,75 @@ export default function ProjectDetail() {
         <p className="page-subtitle">Browse our extensive portfolio of assistive tech</p>
       </div>
 
+      <div className="project-command-panel">
+        <div className="project-search-shell">
+          <svg className="project-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            className="project-search-input"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search projects, partners, or technologies"
+            aria-label="Search projects"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="project-clear-search"
+              onClick={() => setSearchQuery('')}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        <div className="project-filter-row" aria-label="Filter projects by domain">
+          {projectTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={`project-filter-chip ${activeTag === tag ? 'project-filter-chip--active' : ''}`}
+              onClick={() => setActiveTag(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        <div className="project-result-meta">
+          Showing {filteredProjects.length} of {projects.length} projects
+        </div>
+      </div>
+
+      {filteredProjects.length === 0 && (
+        <div className="project-empty-state">
+          <h2>No matching projects</h2>
+          <p>Try a broader keyword or reset the domain filter.</p>
+          <button
+            type="button"
+            className="project-empty-reset"
+            onClick={() => {
+              setSearchQuery('');
+              setActiveTag('All');
+            }}
+          >
+            Reset filters
+          </button>
+        </div>
+      )}
+
       <div className="stagger-children project-list">
-        {projects.map((proj, index) => {
-          const isExpanded = expandedIndex === index;
+        {filteredProjects.map((proj) => {
+          const isExpanded = expandedProject === proj.title;
           const Icon = proj.iconComponent;
           return (
             <div 
-              key={index} 
+              key={proj.title} 
               className={`glass-card project-item-card ${isExpanded ? 'project-item-card--expanded' : ''}`}
-              onClick={() => toggleExpand(index)}
+              onClick={() => toggleExpand(proj.title)}
               style={{ cursor: 'pointer' }}
             >
               {/* Left edge premium colored stripe indicator */}
@@ -414,6 +490,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'ARAST',
@@ -625,6 +702,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn avatar-explain-btn--violet"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'ARA',
@@ -808,6 +886,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'MRI',
@@ -978,6 +1057,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn avatar-explain-btn--violet"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'OralExam',
@@ -1107,6 +1187,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'PolitePackage',
@@ -1229,6 +1310,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn avatar-explain-btn--violet"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'Roleplay',
@@ -1365,6 +1447,7 @@ export default function ProjectDetail() {
                     <button 
                       className="avatar-explain-btn"
                       onClick={(e) => {
+                        e.stopPropagation();
                         window.dispatchEvent(new CustomEvent('avatar-explain-project', {
                           detail: {
                             projectName: 'SafetyVR',

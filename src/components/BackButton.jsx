@@ -2,8 +2,8 @@ import '../styles/components/BackButton.css'
 
 export default function BackButton({ onClick, label = "Back" }) {
   return (
-    <button className="back-button" onClick={onClick}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <button type="button" className="back-button" onClick={onClick}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <polyline points="15 18 9 12 15 6"></polyline>
       </svg>
       {label}

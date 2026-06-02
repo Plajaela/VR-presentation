@@ -3,8 +3,16 @@ import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/Projects.css';
 
+const DEMO_HIGHLIGHTS = [
+  { value: 'LiDAR', label: 'Obstacle sensing' },
+  { value: 'CV', label: 'Visual detection' },
+  { value: 'Realtime', label: 'Path correction' },
+  { value: 'Autonomy', label: 'User remains in control' },
+];
+
 export default function DemoProject() {
   const navigate = useNavigate();
+  const [videoFailed, setVideoFailed] = useState(false);
   const [avatarState, setAvatarState] = useState(() => {
     return window.currentAvatarState || { projectName: null, status: 'idle' };
   });
@@ -33,23 +41,34 @@ export default function DemoProject() {
 
       <div className="glass-card demo-section">
         <div className="demo-video-wrapper">
-          {/* 
-            TODO: 
-            1. Copy your compressed video file into the "public" folder of this project.
-            2. Rename the file to "demo-video.mp4" (or change the src below to match your filename).
-          */}
-          <video 
-            className="demo-video" 
-            controls 
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-            src="/demo-video.mp4"
-            poster="/demo-poster.jpg"
-          >
-            Your browser does not support the video tag.
-          </video>
+          {!videoFailed ? (
+            <video
+              className="demo-video"
+              controls
+              autoPlay
+              muted
+              loop
+              playsInline
+              src="/demo-video.mp4"
+              onError={() => setVideoFailed(true)}
+            >
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <div className="demo-video-fallback" role="status">
+              <h2>Demo video unavailable</h2>
+              <p>The smart wheelchair summary is still available below.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="demo-highlight-grid">
+          {DEMO_HIGHLIGHTS.map((item) => (
+            <div key={item.value} className="demo-highlight-item">
+              <span className="demo-highlight-value">{item.value}</span>
+              <span className="demo-highlight-label">{item.label}</span>
+            </div>
+          ))}
         </div>
 
         <h2 className="demo-content-title">How it works</h2>
@@ -66,6 +85,7 @@ export default function DemoProject() {
             }));
           }}
           style={{ marginBottom: '1rem' }}
+          aria-label="Ask avatar to explain the Smart Wheelchair demo"
         >
           {avatarState.projectName === 'SmartWheelchair' && avatarState.status === 'thinking' ? (
             <span className="speaker-thinking" style={{ marginRight: '6px' }} />

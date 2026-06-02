@@ -6,6 +6,32 @@ export default function AnimatedCounter({ end, duration = 2000, suffix = '', pre
   const hasAnimated = useRef(false);
 
   useEffect(() => {
+    let frameId;
+
+    const animateCount = () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setCount(end);
+        return;
+      }
+
+      const startTime = performance.now();
+
+      const tick = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setCount(Math.floor(eased * end));
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(tick);
+        } else {
+          setCount(end);
+        }
+      };
+
+      frameId = requestAnimationFrame(tick);
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated.current) {
@@ -17,28 +43,11 @@ export default function AnimatedCounter({ end, duration = 2000, suffix = '', pre
     );
 
     if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const animateCount = () => {
-    const startTime = performance.now();
-
-    const tick = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * end));
-
-      if (progress < 1) {
-        requestAnimationFrame(tick);
-      } else {
-        setCount(end);
-      }
+    return () => {
+      observer.disconnect();
+      if (frameId) cancelAnimationFrame(frameId);
     };
-
-    requestAnimationFrame(tick);
-  };
+  }, [duration, end]);
 
   return (
     <span ref={ref} style={{ fontVariantNumeric: 'tabular-nums' }}>

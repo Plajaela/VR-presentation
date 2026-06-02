@@ -2,9 +2,12 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY
-});
+const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+const openai = apiKey ? new OpenAI({ apiKey }) : null;
+
+const SYSTEM_PROMPT = `You are the official assistant for the Enabling Technology Collaboratory (ETC) at Temasek Polytechnic (TP), Singapore. Answer only questions related to ETC.
+
+You can discuss ETC's mission, technology areas, projects, partners, location, contact details, and office hours. If a question is outside ETC, politely steer the visitor back to ETC. If information is not available, say: "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585." Always respond in English.`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,42 +17,33 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    if (!message) {
+    if (!openai) {
+      return res.status(503).json({
+        error: "OpenAI API key is not configured. Set OPENAI_API_KEY in .env.",
+      });
+    }
+
+    if (!message?.trim()) {
       return res.status(400).json({ error: "Message is required" });
     }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: `You are an assistant for the Enabling Technology Collaboratory (ETC) at Temasek Polytechnic (TP), Singapore. Your ONLY role is to answer questions related to ETC.
-
-What you can answer:
-- ETC's mission and overview
-- Core technology areas: AI/Machine Learning, IoT, Immersive Media
-- ETC's research projects (e.g. AI-Assisted Immersive Role-play Platform, TPEBot, IVAM game, VR/AR learning modules, etc.)
-- Industry partners (e.g. AWS, Changi General Hospital, Tan Tock Seng Hospital, etc.)
-- ETC team members and contact details
-- Location: West Wing Block 20, Level 3, Temasek Polytechnic, 21 Tampines Ave 1, Singapore 529757
-- Contact: Tan_cheng_khoon@tp.edu.sg | 6780 5585
-- Office hours: 8.30am–6.00pm, Mon–Fri (Closed Sat, Sun & Public Holidays)
-
-Strict rules:
-1. Allow casual greetings (e.g. "Hi", "Hello", "Good morning") and pleasantries/thanks (e.g. "Thank you"). Respond to these warmly and introduce yourself as the ETC Assistant, then ask how you can help them learn about ETC today.
-2. If the question is NOT related to ETC or Temasek Polytechnic's ETC centre, politely refuse and steer the conversation back to ETC. For example, you can say something like "I'm sorry, but I can only answer questions related to ETC. Shall we learn more about what ETC does instead? Feel free to ask me anything about ETC!" (Translate the sentiment to the language the user is speaking). Always end the refusal with a welcoming prompt to ask about ETC.
-3. Do NOT answer general knowledge questions (e.g. math, science, current events).
-4. Do NOT make up information. If you don't know, say: "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585."
-5. Always stay on-topic. Never break character.` },
-        { role: "user", content: message }
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: message.trim() }
       ],
       temperature: 0.3,
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply = completion.choices[0]?.message?.content?.trim();
 
-    res.status(200).json({ reply });
+    res.status(200).json({
+      reply: reply || "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585.",
+    });
 
   } catch (error) {
     console.error("GPT generation failed:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Unable to generate a response right now." });
   }
 }

@@ -7,10 +7,19 @@ export function useGPT() {
         body: JSON.stringify({ message: userMessage }),
       });
 
-      if (!res.ok) throw new Error('Failed to fetch response from GPT');
+      if (!res.ok) {
+        let errText = 'Failed to fetch response from GPT';
+        try {
+          const errData = await res.json();
+          errText = errData.error || errText;
+        } catch {
+          errText = res.statusText || errText;
+        }
+        throw new Error(errText);
+      }
 
       const data = await res.json();
-      return data.reply;
+      return data.reply || "I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585.";
 
     } catch (error) {
       console.error(error);
@@ -32,7 +41,9 @@ export function useGPT() {
       try {
         const errData = await res.json();
         errText = errData.error || errData.detail || errText;
-      } catch (e) {}
+      } catch {
+        errText = res.statusText || errText;
+      }
       throw new Error(errText);
     }
 

@@ -189,9 +189,77 @@
   cursor: not-allowed;
 }
 
+.home-assistant-mic-btn:disabled,
+.home-assistant-text-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .home-assistant-send-btn svg {
   width: 16px;
   height: 16px;
+}
+
+.home-assistant-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+
+.home-assistant-quick-chip {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 122, 107, 0.16);
+  color: var(--accent-teal);
+  font-size: 0.72rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.home-assistant-quick-chip:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  border-color: rgba(31, 122, 107, 0.34);
+}
+
+.home-assistant-notice {
+  align-self: stretch;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: left;
+  pointer-events: auto;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.16);
+  animation: pop-in 0.25s ease-out;
+}
+
+.home-assistant-notice--info {
+  background: rgba(239, 246, 255, 0.95);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  color: #075985;
+}
+
+.home-assistant-notice--warning {
+  background: rgba(255, 251, 235, 0.95);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  color: #92400e;
+}
+
+.home-assistant-notice--error {
+  background: rgba(254, 242, 242, 0.95);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #991b1b;
 }
 
 /* ===== Status Labels ===== */
@@ -334,6 +402,16 @@
   .home-assistant-text-input {
     font-size: 0.82rem;
     padding: 8px 12px;
+  }
+
+  .home-assistant-quick-row {
+    justify-content: flex-start;
+  }
+
+  .home-assistant-quick-chip {
+    min-height: 26px;
+    font-size: 0.7rem;
+    padding: 0 8px;
   }
 
   .home-assistant-toggle-btn:not(.collapsed) {

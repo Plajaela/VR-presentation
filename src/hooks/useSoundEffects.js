@@ -22,7 +22,8 @@ export function useSoundEffects() {
 
       osc.start();
       osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
+      osc.onended = () => ctx.close().catch(() => undefined);
+    } catch {
       // Ignore audio errors if context is blocked
     }
   }, []);
@@ -48,7 +49,8 @@ export function useSoundEffects() {
 
       osc.start();
       osc.stop(ctx.currentTime + 0.15);
-    } catch (e) {
+      osc.onended = () => ctx.close().catch(() => undefined);
+    } catch {
       // Ignore audio errors
     }
   }, []);

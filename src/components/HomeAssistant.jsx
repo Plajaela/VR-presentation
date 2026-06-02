@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CharacterViewer from './CharacterViewer';
 import { useGPT } from '../hooks/useGPT';
@@ -42,52 +42,121 @@ If the user asks to see, go to, or learn about a specific topic/page, you MUST p
 - For Projects list or Portfolio: Append [NAV_/OurProjects]
 - For Specific details of Projects 1-7: Append [NAV_/OurProjects/ProjectDetail]
 - For the Smart Wheelchair / Live Demo: Append [NAV_/OurProjects/DemoProject]
+- For collaboration or partnership opportunities: Append [NAV_/OurProjects/CollaborationOpportunities]
 - For Home page: Append [NAV_/Home]
 Append the navigation tag as the absolute last characters of your response, with nothing after it — no punctuation, no spaces, no words.
 Example: "We have multiple projects like ARAST and ARA. Let's see the portfolio! [NAV_/OurProjects/ProjectDetail]"`;
+
+const VALID_NAV_ROUTES = new Set([
+  '/Home',
+  '/Introduction',
+  '/OurPartners',
+  '/OurProjects',
+  '/OurProjects/ProjectDetail',
+  '/OurProjects/DemoProject',
+  '/OurProjects/CollaborationOpportunities',
+]);
+
+const QUICK_PROMPTS = [
+  {
+    label: 'Projects',
+    prompt: 'Give me a concise tour of ETC projects and bring me to the project portfolio.',
+  },
+  {
+    label: 'Partners',
+    prompt: 'Summarize ETC partners and bring me to the partners page.',
+  },
+  {
+    label: 'Contact',
+    prompt: 'Tell me ETC contact details and office hours.',
+  },
+  {
+    label: 'Demo',
+    prompt: 'Introduce the Smart Wheelchair featured demo and bring me to that page.',
+  },
+];
 
 export default function HomeAssistant() {
   const navigate = useNavigate();
   const { fetchGPTResponse, transcribeAudio } = useGPT();
 
-  // Layout & UI States
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [textInput, setTextInput] = useState("");
-
-  // Chat States
+  const [assistantNotice, setAssistantNotice] = useState(null);
   const [transcriptText, setTranscriptText] = useState("");
   const [aiResponseText, setAiResponseText] = useState(
     "Hi! I am the official ETC Assistant. How can I help you today?"
   );
-
-  // State for the 3D avatar's script and audio synchronization
   const [latestScript, setLatestScript] = useState("");
-  const [revealData, setRevealData] = useState(null);
+  const [activeProject, setActiveProject] = useState(null);
 
-  // Refs
   const pendingNavRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const [activeProject, setActiveProject] = useState(null);
   const activeProjectRef = useRef(null);
-
-  const updateActiveProject = (val) => {
-    activeProjectRef.current = val;
-    setActiveProject(val);
-  };
   const speakTimeoutRef = useRef(null);
-
-  // SAFARI AUDIO UNLOCK
+  const revealFallbackRef = useRef(null);
   const audioUnlockedRef = useRef(false);
 
-  const unlockAudio = async () => {
+  const updateActiveProject = useCallback((val) => {
+    activeProjectRef.current = val;
+    setActiveProject(val);
+  }, []);
+
+  const showNotice = useCallback((text, type = 'info') => {
+    setAssistantNotice({ text, type, id: Date.now() });
+  }, []);
+
+  useEffect(() => {
+    if (!assistantNotice) return undefined;
+    const timer = setTimeout(() => setAssistantNotice(null), 4800);
+    return () => clearTimeout(timer);
+  }, [assistantNotice]);
+
+  const clearSpeakTimer = useCallback(() => {
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearRevealFallback = useCallback(() => {
+    if (revealFallbackRef.current) {
+      clearTimeout(revealFallbackRef.current);
+      revealFallbackRef.current = null;
+    }
+  }, []);
+
+  const broadcastAvatarStatus = useCallback((detail) => {
+    window.currentAvatarState = detail;
+    window.dispatchEvent(new CustomEvent('avatar-status-broadcast', { detail }));
+  }, []);
+
+  const resetAvatarState = useCallback(() => {
+    clearSpeakTimer();
+    broadcastAvatarStatus({ projectName: null, status: 'idle' });
+    updateActiveProject(null);
+  }, [broadcastAvatarStatus, clearSpeakTimer, updateActiveProject]);
+
+  const revealAssistantResponse = useCallback((text, navTarget = pendingNavRef.current) => {
+    clearRevealFallback();
+    setIsThinking(false);
+    setAiResponseText(text);
+
+    if (navTarget && VALID_NAV_ROUTES.has(navTarget)) {
+      setTimeout(() => navigate(navTarget), 900);
+    }
+
+    pendingNavRef.current = null;
+  }, [clearRevealFallback, navigate]);
+
+  const unlockAudio = useCallback(async () => {
     if (audioUnlockedRef.current) return;
 
     try {
-      const AudioContextClass =
-        window.AudioContext || window.webkitAudioContext;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
       if (AudioContextClass) {
         const ctx = new AudioContextClass();
@@ -106,7 +175,6 @@ export default function HomeAssistant() {
         source.start(0);
       }
 
-      // ALWAYS unlock HTMLAudioElement as well, because avatar-model uses `new Audio().play()`
       const audio = new Audio(
         "data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAACcQCA"
       );
@@ -115,83 +183,12 @@ export default function HomeAssistant() {
       audio.pause();
 
       audioUnlockedRef.current = true;
-      console.log("Audio unlocked successfully");
-    } catch (err) {
-      console.log("Audio unlock failed or not needed", err);
+    } catch {
+      showNotice('Audio will start after the next user interaction.', 'warning');
     }
-  };
+  }, [showNotice]);
 
-  // --- Synchronization Effect ---
-  // Listens for the signal that the audio has downloaded and is ready to play
-  useEffect(() => {
-    if (revealData) {
-      // Audio is ready! Hide the typing dots and show the text bubble
-      setIsThinking(false);
-      setAiResponseText(revealData.text);
-
-      // Trigger navigation if a tag was provided by the AI
-      if (pendingNavRef.current) {
-        // Capture the route in case pendingNavRef gets cleared quickly
-        const route = pendingNavRef.current;
-
-        setTimeout(() => {
-          navigate(route);
-        }, 1500);
-
-        pendingNavRef.current = null;
-      }
-    }
-  }, [revealData, navigate]);
-
-  // --- Listen to external triggers to explain a project ---
-  useEffect(() => {
-    const handleExplainProject = (e) => {
-      const { projectName, projectTitle, customPrompt } = e.detail;
-      
-      updateActiveProject(projectName);
-      
-      // Clear any previous speaking timer
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
-      }
-
-      // Broadcast thinking state for this project and cache it globally
-      window.currentAvatarState = { projectName, status: 'thinking' };
-      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-        detail: { projectName, status: 'thinking' }
-      }));
-
-      // Auto expand the avatar if collapsed
-      setIsCollapsed(false);
-      
-      // Unlock Safari Audio context if needed
-      unlockAudio();
-
-      if (customPrompt) {
-        sendMessage(customPrompt, false);
-      } else {
-        sendMessage(`Please describe the ${projectTitle} project in detail.`, false);
-      }
-    };
-
-    window.addEventListener('avatar-explain-project', handleExplainProject);
-    return () => {
-      window.removeEventListener('avatar-explain-project', handleExplainProject);
-    };
-  }, []);
-
-  // Clean up timers on unmount
-  useEffect(() => {
-    return () => {
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // --- Custom TTS Handler for CharacterViewer ---
-  const handleTTSFetch = async (text) => {
+  const handleTTSFetch = useCallback(async (text) => {
     try {
       const response = await fetch('/api/tts', {
         method: 'POST',
@@ -200,111 +197,85 @@ export default function HomeAssistant() {
       });
 
       if (!response.ok) {
-        throw new Error(`TTS server returned status ${response.status}`);
+        let errorText = `TTS server returned status ${response.status}`;
+        try {
+          const data = await response.clone().json();
+          errorText = data.error || errorText;
+        } catch {
+          errorText = response.statusText || errorText;
+        }
+        throw new Error(errorText);
       }
 
-      // Estimate duration: average 140 words per minute (about 2.3 words/sec)
-      // For English text: ~14 characters per second
       const charCount = text.length;
       const durationMs = Math.max(4000, (charCount / 14) * 1000);
+      const projectName = activeProjectRef.current;
 
-      // Clear any previous speaking timer
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-      }
+      clearSpeakTimer();
+      broadcastAvatarStatus({ projectName, status: 'speaking', durationMs });
 
-      // Set globally cached avatar state
-      window.currentAvatarState = { projectName: activeProjectRef.current, status: 'speaking' };
-
-      // Broadcast that we started speaking
-      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-        detail: { projectName: activeProjectRef.current, status: 'speaking', durationMs }
-      }));
-
-      // Start a self-expiring timer to transition back to idle
       speakTimeoutRef.current = setTimeout(() => {
-        window.currentAvatarState = { projectName: null, status: 'idle' };
-        window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-          detail: { projectName: null, status: 'idle' }
-        }));
+        broadcastAvatarStatus({ projectName: null, status: 'idle' });
         updateActiveProject(null);
         speakTimeoutRef.current = null;
       }, durationMs);
 
-      // Signal the React component that the fetch is done
-      setRevealData({ text, id: Date.now() });
+      revealAssistantResponse(text);
 
       return response;
     } catch (err) {
       console.error("TTS fetch failed in handleTTSFetch:", err);
-      setIsThinking(false);
-      
-      // Reset avatar status to idle immediately to clear spinner
-      window.currentAvatarState = { projectName: null, status: 'idle' };
-      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-        detail: { projectName: null, status: 'idle' }
-      }));
-      updateActiveProject(null);
-      
+      showNotice('Voice playback is unavailable, so I displayed the answer as text.', 'warning');
+      revealAssistantResponse(text);
+      resetAvatarState();
       throw err;
     }
-  };
+  }, [broadcastAvatarStatus, clearSpeakTimer, resetAvatarState, revealAssistantResponse, showNotice, updateActiveProject]);
 
-  // --- Core AI Chat Logic ---
-  const sendMessage = async (userMessage, showUserBubble = true) => {
+  const sendMessage = useCallback(async (userMessage, showUserBubble = true) => {
+    const cleanMessage = userMessage.trim();
+    if (!cleanMessage) return;
+
     if (showUserBubble) {
-      setTranscriptText(userMessage);
-      // Clear active project explaining state if user types/talks themselves
-      updateActiveProject(null);
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
-      }
-      window.currentAvatarState = { projectName: null, status: 'idle' };
-      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-        detail: { projectName: null, status: 'idle' }
-      }));
+      setTranscriptText(cleanMessage);
+      resetAvatarState();
     } else {
       setTranscriptText("");
     }
+
+    setAssistantNotice(null);
     setAiResponseText("");
     setIsThinking(true);
     pendingNavRef.current = null;
+    clearRevealFallback();
 
     try {
-      // Safely separate the system instructions from the user's actual question
-      const enrichedMessage = `${SYSTEM_INSTRUCTIONS}\n\nUser Query: "${userMessage}"`;
+      const enrichedMessage = `${SYSTEM_INSTRUCTIONS}\n\nUser Query: "${cleanMessage}"`;
       const aiMessage = await fetchGPTResponse(enrichedMessage);
+      const safeMessage = typeof aiMessage === 'string' ? aiMessage : '';
 
-      let speakText = aiMessage;
+      let speakText = safeMessage.trim();
       let navTarget = null;
-      const navMatch = aiMessage.match(/^([\s\S]*?)\s*\[NAV_\s*(.*?)\s*\]/);
+      const navMatch = safeMessage.match(/\s*\[NAV_\s*(\/[^\]]+)\s*\]\s*$/);
 
       if (navMatch) {
-        speakText = navMatch[1].trim(); // everything BEFORE the tag
-        navTarget = navMatch[2].trim(); // the route
-      } else {
-        speakText = aiMessage.trim();
+        speakText = safeMessage.replace(navMatch[0], '').trim();
+        navTarget = VALID_NAV_ROUTES.has(navMatch[1].trim()) ? navMatch[1].trim() : null;
       }
 
-      // If the AI returned an empty string for some reason, abort safely
       if (!speakText) {
-        setIsThinking(false);
-        if (navTarget) navigate(navTarget);
-        
-        // Reset avatar state
-        window.currentAvatarState = { projectName: null, status: 'idle' };
-        window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-          detail: { projectName: null, status: 'idle' }
-        }));
-        updateActiveProject(null);
+        revealAssistantResponse("I don't have that information. Please contact ETC directly at Tan_cheng_khoon@tp.edu.sg or 6780 5585.", navTarget);
+        resetAvatarState();
         return;
       }
 
-      // Store the navigation target in the ref
       pendingNavRef.current = navTarget;
 
-      // Force rerender if same text repeated
+      revealFallbackRef.current = setTimeout(() => {
+        showNotice('Avatar voice is still loading, so I displayed the answer now.', 'info');
+        revealAssistantResponse(speakText, navTarget);
+      }, 6500);
+
       setLatestScript((prev) =>
         prev === speakText
           ? speakText + '\u200B'
@@ -313,39 +284,48 @@ export default function HomeAssistant() {
 
     } catch (e) {
       console.error("Chat error:", e);
-      setIsThinking(false);
-      setAiResponseText("I'm sorry, I am having trouble connecting to my brain. Please try again.");
-      
-      // Reset avatar state
-      window.currentAvatarState = { projectName: null, status: 'idle' };
-      window.dispatchEvent(new CustomEvent('avatar-status-broadcast', {
-        detail: { projectName: null, status: 'idle' }
-      }));
-      updateActiveProject(null);
+      revealAssistantResponse("I'm sorry, I am having trouble connecting to the ETC assistant service. Please try again.");
+      showNotice(e.message || 'Assistant request failed.', 'error');
+      resetAvatarState();
     }
-  };
+  }, [clearRevealFallback, fetchGPTResponse, resetAvatarState, revealAssistantResponse, showNotice]);
 
-  // --- Voice Input ---
-  const toggleListen = async () => {
-    // IMPORTANT: Safari audio unlock MUST happen
-    // inside direct user interaction
-    await unlockAudio();
+  useEffect(() => {
+    const handleExplainProject = (e) => {
+      const { projectName, projectTitle, customPrompt } = e.detail;
 
-    if (isListening) {
-      // Stop recording — this triggers ondataavailable + onstop
-      mediaRecorderRef.current?.stop();
-    } else {
-      await startListening();
+      updateActiveProject(projectName);
+      clearSpeakTimer();
+      broadcastAvatarStatus({ projectName, status: 'thinking' });
+      setIsCollapsed(false);
+      unlockAudio();
+      sendMessage(customPrompt || `Please describe the ${projectTitle} project in detail.`, false);
+    };
+
+    window.addEventListener('avatar-explain-project', handleExplainProject);
+    return () => {
+      window.removeEventListener('avatar-explain-project', handleExplainProject);
+    };
+  }, [broadcastAvatarStatus, clearSpeakTimer, sendMessage, unlockAudio, updateActiveProject]);
+
+  useEffect(() => {
+    return () => {
+      clearSpeakTimer();
+      clearRevealFallback();
+    };
+  }, [clearRevealFallback, clearSpeakTimer]);
+
+  const startListening = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      showNotice('Voice input is not supported in this browser. Please type your question.', 'warning');
+      return;
     }
-  };
 
-  const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true
       });
 
-      // Detect supported mimeType (Safari doesn't support audio/webm)
       const SUPPORTED_TYPES = [
         "audio/webm;codecs=opus",
         "audio/webm",
@@ -363,11 +343,9 @@ export default function HomeAssistant() {
       setIsListening(true);
       setTranscriptText("");
       setAiResponseText("");
+      setAssistantNotice(null);
 
-      // SAFARI SAFE AudioContext
-      const AudioContextClass =
-        window.AudioContext || window.webkitAudioContext;
-
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContextClass();
 
       if (audioContext.state === "suspended") {
@@ -389,6 +367,7 @@ export default function HomeAssistant() {
 
       let silenceStart = null;
       let stopped = false;
+      let silenceFrame = null;
 
       const SILENCE_THRESHOLD = 10;
       const SILENCE_DURATION = 1400;
@@ -409,7 +388,6 @@ export default function HomeAssistant() {
           if (!silenceStart) silenceStart = Date.now();
           else if (Date.now() - silenceStart > SILENCE_DURATION) {
             stopped = true;
-            audioContext.close();
             mediaRecorderRef.current?.stop();
             return;
           }
@@ -417,7 +395,7 @@ export default function HomeAssistant() {
           silenceStart = null;
         }
 
-        requestAnimationFrame(checkSilence);
+        silenceFrame = requestAnimationFrame(checkSilence);
       };
 
       mediaRecorder.ondataavailable = (e) => {
@@ -426,6 +404,10 @@ export default function HomeAssistant() {
 
       mediaRecorder.onstop = async () => {
         stopped = true;
+        if (silenceFrame) cancelAnimationFrame(silenceFrame);
+        if (audioContext.state !== "closed") {
+          audioContext.close().catch(() => undefined);
+        }
         stream.getTracks().forEach(track => track.stop());
         setIsListening(false);
 
@@ -445,37 +427,58 @@ export default function HomeAssistant() {
           } else {
             setIsThinking(false);
             setAiResponseText("Sorry, I couldn't make that out. Please try again.");
+            showNotice('No clear speech was detected.', 'warning');
           }
         } catch (err) {
           console.error("STT error:", err);
           setIsThinking(false);
-          setAiResponseText(`Error: ${err.message || "Transcription failed"}`);
+          setAiResponseText("I could not transcribe that audio. Please try again or type your question.");
+          showNotice(err.message || "Transcription failed.", 'error');
         }
       };
 
       mediaRecorder.start();
-      requestAnimationFrame(checkSilence);
+      silenceFrame = requestAnimationFrame(checkSilence);
 
     } catch (err) {
       console.error("Mic access denied:", err);
       setIsListening(false);
-      alert("Microphone access is required for voice input.");
+      showNotice("Microphone access is required for voice input. You can still type your question.", 'error');
     }
-  };
+  }, [sendMessage, showNotice, transcribeAudio]);
 
-  // --- Text Input ---
-  const handleTextSubmit = async (e) => {
+  const toggleListen = useCallback(async () => {
+    await unlockAudio();
+
+    if (isListening) {
+      mediaRecorderRef.current?.stop();
+    } else {
+      await startListening();
+    }
+  }, [isListening, startListening, unlockAudio]);
+
+  const handleTextSubmit = useCallback(async (e) => {
     e.preventDefault();
 
-    // IMPORTANT: Safari audio unlock MUST happen
-    // inside direct user interaction
     await unlockAudio();
 
     if (!textInput.trim() || isThinking) return;
+    if (textInput.trim().length > 280) {
+      showNotice('Please keep assistant questions under 280 characters.', 'warning');
+      return;
+    }
+
     const msg = textInput.trim();
     setTextInput("");
     await sendMessage(msg);
-  };
+  }, [isThinking, sendMessage, showNotice, textInput, unlockAudio]);
+
+  const handleQuickPrompt = useCallback(async (prompt) => {
+    if (isThinking) return;
+    await unlockAudio();
+    setTextInput("");
+    await sendMessage(prompt);
+  }, [isThinking, sendMessage, unlockAudio]);
 
   return (
     <>
@@ -483,6 +486,8 @@ export default function HomeAssistant() {
         className={`home-assistant-toggle-btn ${isCollapsed ? 'collapsed' : ''}`}
         onClick={() => setIsCollapsed(!isCollapsed)}
         title={isCollapsed ? "Show Assistant" : "Hide Assistant"}
+        aria-label={isCollapsed ? "Show ETC Assistant" : "Hide ETC Assistant"}
+        aria-expanded={!isCollapsed}
       >
         {isCollapsed ? (
           <svg
@@ -509,7 +514,7 @@ export default function HomeAssistant() {
         )}
       </button>
 
-      <div className={`home-assistant-container ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className={`home-assistant-container ${isCollapsed ? 'collapsed' : ''}`} aria-hidden={isCollapsed}>
         <div
           className="home-assistant-canvas-wrapper"
           style={{ position: 'absolute', inset: 0 }}
@@ -520,6 +525,7 @@ export default function HomeAssistant() {
             script={latestScript}
             button={false}
             modelScale={0.9}
+            section="ETC Assistant Avatar"
           />
         </div>
 
@@ -556,6 +562,27 @@ export default function HomeAssistant() {
             </div>
           )}
 
+          {!activeProject && assistantNotice && (
+            <div className={`home-assistant-notice home-assistant-notice--${assistantNotice.type}`} role="status">
+              {assistantNotice.text}
+            </div>
+          )}
+
+          {!activeProject && !isListening && !isThinking && (
+            <div className="home-assistant-quick-row" aria-label="Suggested assistant questions">
+              {QUICK_PROMPTS.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  className="home-assistant-quick-chip"
+                  onClick={() => handleQuickPrompt(item.prompt)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <form className="home-assistant-text-form" onSubmit={handleTextSubmit}>
             <input
               type="text"
@@ -563,7 +590,8 @@ export default function HomeAssistant() {
               placeholder="Type a question..."
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              disabled={isThinking}
+              disabled={isThinking || isListening}
+              maxLength={280}
             />
             <button type="submit" className="home-assistant-send-btn" disabled={isThinking || !textInput.trim()} title="Send">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

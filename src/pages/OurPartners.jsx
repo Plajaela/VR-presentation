@@ -128,9 +128,16 @@ export default function OurPartners() {
           <div className="header-divider" />
         </div>
 
-        <div className="external-partner-grid">
-          {externalGroups.flatMap(g => g.partners).map((p, i) => (
-            <ExternalPartnerCard key={p.name} partner={p} index={i} />
+        <div className="external-partner-groups">
+          {externalGroups.map((group) => (
+            <div key={group.category} className="external-partner-group">
+              <h3 className="external-partner-group-title">{group.category}</h3>
+              <div className="external-partner-grid">
+                {group.partners.map((p, i) => (
+                  <ExternalPartnerCard key={p.name} partner={p} index={i} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>

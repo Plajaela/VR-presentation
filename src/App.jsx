@@ -1,16 +1,27 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import LiveClock from './components/LiveClock';
-import Home from './pages/Home';
-import Introduction from './pages/Introduction';
-import OurPartners from './pages/OurPartners';
-import OurProjects from './pages/OurProjects';
-import ProjectDetail from './pages/ProjectDetail';
-import DemoProject from './pages/DemoProject';
-import CollaborationOpportunities from './pages/CollaborationOpportunities';
-import LandingPage from './pages/LandingPage';
-import HomeAssistant from './components/HomeAssistant';
 import NetworkBackground from './components/NetworkBackground';
 import './styles/App.css';
+
+const Home = lazy(() => import('./pages/Home'));
+const Introduction = lazy(() => import('./pages/Introduction'));
+const OurPartners = lazy(() => import('./pages/OurPartners'));
+const OurProjects = lazy(() => import('./pages/OurProjects'));
+const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
+const DemoProject = lazy(() => import('./pages/DemoProject'));
+const CollaborationOpportunities = lazy(() => import('./pages/CollaborationOpportunities'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const HomeAssistant = lazy(() => import('./components/HomeAssistant'));
+
+function RouteFallback() {
+  return (
+    <div className="route-fallback" role="status" aria-live="polite">
+      <span className="route-fallback-spinner" />
+      <span>Loading section</span>
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -29,20 +40,24 @@ function App() {
 
         {/* The page-enter class ensures your fade-in animation still plays on route change */}
         <div className="page-transition page-enter">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/Home" element={<Home />} />
-            <Route path="/Introduction" element={<Introduction />} />
-            <Route path="/OurPartners" element={<OurPartners />} />
-            <Route path="/OurProjects" element={<OurProjects />} />
-            <Route path="/OurProjects/ProjectDetail" element={<ProjectDetail />} />
-            <Route path="/OurProjects/DemoProject" element={<DemoProject />} />
-            <Route path="/OurProjects/CollaborationOpportunities" element={<CollaborationOpportunities />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/Home" element={<Home />} />
+              <Route path="/Introduction" element={<Introduction />} />
+              <Route path="/OurPartners" element={<OurPartners />} />
+              <Route path="/OurProjects" element={<OurProjects />} />
+              <Route path="/OurProjects/ProjectDetail" element={<ProjectDetail />} />
+              <Route path="/OurProjects/DemoProject" element={<DemoProject />} />
+              <Route path="/OurProjects/CollaborationOpportunities" element={<CollaborationOpportunities />} />
+            </Routes>
+          </Suspense>
         </div>
         
         {/* Global 3D Avatar Assistant */}
-        <HomeAssistant />
+        <Suspense fallback={null}>
+          <HomeAssistant />
+        </Suspense>
 
       </div>
     </BrowserRouter>

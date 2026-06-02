@@ -10,9 +10,9 @@
 
 .projects-grid.double-column {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  max-width: 860px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  max-width: 1040px;
   width: 100%;
 }
 
@@ -191,6 +191,12 @@
   }
 }
 
+@media (min-width: 769px) and (max-width: 980px) {
+  .projects-grid.double-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* ============================
    ProjectDetail.jsx — Premium Glassmorphic Portfolio Cards
    ============================ */
@@ -199,6 +205,120 @@
   flex-direction: column;
   gap: 1.25rem;
   margin-top: 2rem;
+}
+
+.project-command-panel {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(31, 122, 107, 0.1);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: var(--shadow-soft);
+}
+
+.project-search-shell {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.75rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.project-search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-teal);
+  flex-shrink: 0;
+}
+
+.project-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.project-search-input::placeholder {
+  color: rgba(110, 110, 115, 0.72);
+}
+
+.project-clear-search,
+.project-empty-reset {
+  min-height: 30px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(31, 122, 107, 0.08);
+  color: var(--accent-teal);
+  font-size: 0.78rem;
+  font-weight: 750;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.project-clear-search:hover,
+.project-empty-reset:hover {
+  background: rgba(31, 122, 107, 0.14);
+  transform: translateY(-1px);
+}
+
+.project-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.project-filter-chip {
+  min-height: 32px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 750;
+  transition: all 0.2s ease;
+}
+
+.project-filter-chip:hover,
+.project-filter-chip--active {
+  background: rgba(31, 122, 107, 0.1);
+  border-color: rgba(31, 122, 107, 0.22);
+  color: var(--accent-teal);
+}
+
+.project-result-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.project-empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 1.4rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(31, 122, 107, 0.24);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.project-empty-state h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.project-empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .project-item-card {
@@ -427,6 +547,60 @@
   display: block;
 }
 
+.demo-video-fallback {
+  height: 100%;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(31, 122, 107, 0.08), rgba(124, 58, 237, 0.08));
+}
+
+.demo-video-fallback h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.demo-video-fallback p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.demo-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 0 0 1.4rem;
+}
+
+.demo-highlight-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.demo-highlight-value {
+  color: var(--accent-teal);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.demo-highlight-label {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
 .demo-content-title {
   color: var(--text-heading);
   margin-bottom: 0.5rem;
@@ -443,6 +617,12 @@
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .demo-highlight-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ============================

@@ -2,10 +2,10 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY
-});
-const model_voice = "marin";
+const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+const openai = apiKey ? new OpenAI({ apiKey }) : null;
+const MODEL_VOICE = "marin";
+const SUPPORTED_FORMATS = new Set(["mp3", "wav", "opus", "aac", "flac", "pcm"]);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,31 +14,42 @@ export default async function handler(req, res) {
 
   try {
     const { text, format = "wav" } = req.body;
+    const normalizedFormat = String(format).toLowerCase();
 
-    if (!text) {
+    if (!openai) {
+      return res.status(503).json({
+        error: "OpenAI API key is not configured. Set OPENAI_API_KEY in .env.",
+      });
+    }
+
+    if (!text?.trim()) {
       return res.status(400).json({ error: "Text is required" });
+    }
+
+    if (!SUPPORTED_FORMATS.has(normalizedFormat)) {
+      return res.status(400).json({ error: "Unsupported audio format" });
     }
 
     const audio = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
-      voice: model_voice,
-      input: text,
+      voice: MODEL_VOICE,
+      input: text.trim().slice(0, 3800),
       instructions: `Speak in a warm and natural human tone with gentle expressiveness.
       Add small variations in pitch and rhythm to sound alive.
       Keep the delivery smooth, clear, and stable.`,
       speed: 1.0,
-      response_format: format,
+      response_format: normalizedFormat,
     });
 
     const buffer = Buffer.from(await audio.arrayBuffer());
 
-    const contentType = format === "mp3" ? "audio/mpeg" : `audio/${format}`;
+    const contentType = normalizedFormat === "mp3" ? "audio/mpeg" : `audio/${normalizedFormat}`;
     res.setHeader("Content-Type", contentType);
 
     res.send(buffer);
 
   } catch (error) {
     console.error("TTS generation failed:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Unable to generate speech right now." });
   }
 }

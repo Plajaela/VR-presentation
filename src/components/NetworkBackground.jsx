@@ -4,6 +4,7 @@ import { loadSlim } from "@tsparticles/slim";
 
 export default function NetworkBackground() {
   const [init, setInit] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => {
@@ -13,7 +14,11 @@ export default function NetworkBackground() {
     });
   }, []);
 
-  const isMobile = window.innerWidth <= 768;
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Particles are extremely heavy on mobile devices and cause severe lag.
   // Instead of struggling with low FPS, we disable them entirely on mobile.
