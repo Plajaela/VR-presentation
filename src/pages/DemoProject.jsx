@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
+import AvatarExplainButton from '../components/AvatarExplainButton';
+import { useAvatarStatus } from '../hooks/useAvatarStatus';
 import '../styles/pages/Projects.css';
 
 const DEMO_HIGHLIGHTS = [
@@ -13,21 +15,7 @@ const DEMO_HIGHLIGHTS = [
 export default function DemoProject() {
   const navigate = useNavigate();
   const [videoFailed, setVideoFailed] = useState(false);
-  const [avatarState, setAvatarState] = useState(() => {
-    return window.currentAvatarState || { projectName: null, status: 'idle' };
-  });
-
-  useEffect(() => {
-    const handleBroadcast = (e) => {
-      const { projectName, status } = e.detail;
-      setAvatarState({ projectName, status });
-    };
-
-    window.addEventListener('avatar-status-broadcast', handleBroadcast);
-    return () => {
-      window.removeEventListener('avatar-status-broadcast', handleBroadcast);
-    };
-  }, []);
+  const avatarState = useAvatarStatus();
 
   return (
     <div className="page-container animate-fade-in">
@@ -72,38 +60,13 @@ export default function DemoProject() {
         </div>
 
         <h2 className="demo-content-title">How it works</h2>
-        <button 
-          className="avatar-explain-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            window.dispatchEvent(new CustomEvent('avatar-explain-project', {
-              detail: {
-                projectName: 'SmartWheelchair',
-                projectTitle: 'Smart Wheelchair Demo (Featured Demo)',
-                customPrompt: 'Explain the Smart Wheelchair Featured Demo project in detail. Describe how standard motorized wheelchairs are augmented with LiDAR sensors and Computer Vision (CV) algorithms to automatically detect obstacles in real-time, gently correcting the path to prevent collisions while preserving user autonomy.'
-              }
-            }));
-          }}
+        <AvatarExplainButton
+          projectName="SmartWheelchair"
+          projectTitle="Smart Wheelchair Demo (Featured Demo)"
+          customPrompt="Explain the Smart Wheelchair Featured Demo project in detail. Describe how standard motorized wheelchairs are augmented with LiDAR sensors and Computer Vision (CV) algorithms to automatically detect obstacles in real-time, gently correcting the path to prevent collisions while preserving user autonomy."
+          avatarState={avatarState}
           style={{ marginBottom: '1rem' }}
-          aria-label="Ask avatar to explain the Smart Wheelchair demo"
-        >
-          {avatarState.projectName === 'SmartWheelchair' && avatarState.status === 'thinking' ? (
-            <span className="speaker-thinking" style={{ marginRight: '6px' }} />
-          ) : avatarState.projectName === 'SmartWheelchair' && avatarState.status === 'speaking' ? (
-            <div className="speaker-waves animating" style={{ marginRight: '6px' }}>
-              <span className="speaker-bar"></span>
-              <span className="speaker-bar"></span>
-              <span className="speaker-bar"></span>
-            </div>
-          ) : (
-            <span className="avatar-explain-btn-sparkle">✨</span>
-          )}
-          {avatarState.projectName === 'SmartWheelchair' && avatarState.status === 'speaking'
-            ? 'Avatar Explaining...'
-            : avatarState.projectName === 'SmartWheelchair' && avatarState.status === 'thinking'
-            ? 'Avatar Thinking...'
-            : 'Listen to Avatar Explain'}
-        </button>
+        />
         <p className="demo-content-desc">
           This demonstration highlights our integration of LiDAR sensors and Computer Vision (CV)
           algorithms onto a standard motorized wheelchair. The system automatically detects obstacles

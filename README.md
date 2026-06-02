@@ -11,6 +11,17 @@ Interactive presentation app for the Enabling Technology Collaboratory (ETC) at 
 - Express API handlers for GPT, speech-to-text, and text-to-speech with validation and clearer error responses.
 - Route-level lazy loading to reduce initial JavaScript cost.
 
+## Recent Improvements (Pre-Demo Pass)
+
+The latest pass focused on polish, performance, accessibility, and code quality:
+
+- **Performance — hero image:** Recompressed the building photo from **2.8 MB → ~0.45 MB** (4032px → 1600px), removing the single heaviest asset on the Home page with no visible quality loss.
+- **Code quality — DRY refactor:** Extracted the duplicated "Listen to Avatar Explain" markup (repeated **8 times** across the project pages) into a single reusable `AvatarExplainButton` component, plus a shared `useAvatarStatus` hook. This removed ~200 lines of copy-pasted JSX and shrank the project bundle.
+- **New feature — reading progress + back-to-top:** A `ScrollProgress` component adds a gradient progress bar and a floating back-to-top button, and resets scroll position on every route change so each section opens at the top.
+- **New feature — search shortcut:** Press **`/`** anywhere on the portfolio page to jump straight to the project search box (with an inline hint).
+- **Accessibility:** Project cards are now real keyboard controls (focusable, Enter/Space to expand, `aria-expanded`, visible focus ring); the avatar buttons announce state via `aria-live`.
+- **Robustness — 404 route:** Unknown URLs now render a styled `NotFound` page instead of a blank screen.
+
 ## Tech Stack
 
 - React 19 + Vite
@@ -24,10 +35,17 @@ Interactive presentation app for the Enabling Technology Collaboratory (ETC) at 
 
 ```text
 src/
-  App.jsx                         # Routes, persistent background, clock, assistant
-  components/                     # Avatar, assistant, counters, clock, nav controls
-  hooks/                          # GPT/STT client hook and sound effects
-  pages/                          # Presentation sections
+  App.jsx                         # Routes, persistent background, clock, scroll + assistant
+  components/
+    AvatarExplainButton.jsx       # Reusable "Listen to Avatar Explain" control
+    ScrollProgress.jsx            # Reading-progress bar + back-to-top + per-route scroll reset
+    ...                           # Avatar, assistant, counters, clock, nav controls
+  hooks/
+    useAvatarStatus.js            # Shared subscription to avatar thinking/speaking state
+    ...                           # GPT/STT client hook and sound effects
+  pages/
+    NotFound.jsx                  # 404 catch-all page
+    ...                           # Presentation sections
   styles/                         # Global, page, and component CSS
 api/
   gpt.js                          # ETC assistant endpoint
