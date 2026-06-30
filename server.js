@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
+import formidable from 'formidable';
 
 // Load environment variables
 dotenv.config();
@@ -21,9 +22,9 @@ const PORT = process.env.PORT || 20356;
 
 // Middleware
 app.use(cors());
-// Parse JSON bodies except for STT which uses formidable
+// Parse JSON bodies except for STT and video upload which use formidable
 app.use((req, res, next) => {
-  if (req.path === '/api/stt') {
+  if (req.path === '/api/stt' || req.path === '/api/upload-video') {
     next();
   } else {
     express.json()(req, res, next);
@@ -78,6 +79,93 @@ app.post('/api/projects', async (req, res) => {
   } catch (error) {
     console.error('Error saving projects:', error);
     return res.status(500).json({ success: false, message: 'Failed to write projects file to disk' });
+  }
+});
+
+// Admin Save Demo Endpoint
+app.post('/api/demo', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== 'Bearer admin-session-token') {
+    return res.status(403).json({ success: false, message: 'Unauthorized access' });
+  }
+
+  const { demoData } = req.body;
+  if (!demoData || typeof demoData !== 'object') {
+    return res.status(400).json({ success: false, message: 'Invalid demo data format' });
+  }
+
+  try {
+    const dataString = JSON.stringify(demoData, null, 2);
+    
+    // Save to public/demo.json (source code)
+    const publicPath = path.join(__dirname, 'public', 'demo.json');
+    await fs.writeFile(publicPath, dataString, 'utf8');
+
+    // Save to dist/demo.json if dist directory exists (served output)
+    const distPath = path.join(__dirname, 'dist', 'demo.json');
+    try {
+      await fs.writeFile(distPath, dataString, 'utf8');
+    } catch (err) {
+      // Ignore if dist doesn't exist yet
+    }
+
+    return res.json({ success: true, message: 'Demo configuration saved successfully' });
+  } catch (error) {
+    console.error('Error saving demo:', error);
+    return res.status(500).json({ success: false, message: 'Failed to write demo file to disk' });
+  }
+});
+
+// Admin Save Video Upload Endpoint
+app.post('/api/upload-video', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== 'Bearer admin-session-token') {
+    return res.status(403).json({ success: false, message: 'Unauthorized access' });
+  }
+
+  try {
+    const form = formidable({
+      keepExtensions: true,
+      maxFileSize: 100 * 1024 * 1024, // 100MB max limit
+    });
+
+    const [, files] = await form.parse(req);
+    const videoFile = files.video?.[0];
+
+    if (!videoFile) {
+      return res.status(400).json({ success: false, message: 'No video file received' });
+    }
+
+    const originalName = videoFile.originalFilename || 'uploaded-video.mp4';
+    // Generate a safe unique filename
+    const ext = path.extname(originalName) || '.mp4';
+    const baseName = path.basename(originalName, ext).replace(/[^a-zA-Z0-9-]/g, '_');
+    const safeName = `video-${Date.now()}-${baseName}${ext}`;
+
+    const publicDir = path.join(__dirname, 'public');
+    const publicPath = path.join(publicDir, safeName);
+
+    // Save to public directory (source code static assets)
+    await fs.copyFile(videoFile.filepath, publicPath);
+    await fs.unlink(videoFile.filepath);
+
+    // Save to dist directory (served static assets) if dist exists
+    const distDir = path.join(__dirname, 'dist');
+    const distPath = path.join(distDir, safeName);
+    try {
+      await fs.copyFile(publicPath, distPath);
+    } catch (err) {
+      // Ignore if dist doesn't exist yet
+    }
+
+    return res.json({
+      success: true,
+      message: 'Video uploaded successfully',
+      videoUrl: `/${safeName}`
+    });
+  } catch (error) {
+    console.error('Video upload failed:', error);
+    return res.status(500).json({ success: false, message: 'Video upload failed: ' + error.message });
   }
 });
 

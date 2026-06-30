@@ -1,0 +1,24 @@
+{
+  "title": "Featured Demo",
+  "subtitle": "Experience a featured serious training simulation in action",
+  "videoSrc": "/demo-video.mp4",
+  "howItWorksTitle": "How it works",
+  "description": "This featured demo places trainees inside a virtual emergency department where they practise thinking like junior doctors under pressure. They observe the patient's condition, decide what action is needed, request the right medicine, and verify the delivered medication before it is used. Each run is recorded, turning a rare high-stakes scenario into repeatable practice with clear review points for feedback and improvement.",
+  "highlights": [
+    { "value": "VR Simulation", "label": "Emergency Scenario" },
+    { "value": "Verification", "label": "Step-by-step checks" },
+    { "value": "Procedure", "label": "Verify medicine orders" },
+    { "value": "Video Log", "label": "Review & self-improvement" }
+  ],
+  "avatar": {
+    "projectName": "PatientSafetyVR",
+    "projectTitle": "Patient Safety VR Training (Featured Demo)",
+    "customPrompt": "Explain the Patient Safety VR Training featured demo in an engaging way. Describe a trainee stepping into a virtual emergency department as a junior doctor, checking the patient's condition, deciding what action to take, ordering the correct medicine, verifying the delivered medicine before use, and reviewing the recorded session afterward for feedback and improvement. Keep it clear, lively, and suitable for visitors watching the demo video."
+  },
+  "tags": [
+    "Virtual Reality",
+    "Emergency Protocol",
+    "Patient Safety",
+    "Video Feedback"
+  ]
+}

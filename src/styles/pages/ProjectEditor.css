@@ -4,7 +4,7 @@
 
 .editor-container {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 1.8rem;
   margin-top: 1.5rem;
   align-items: start;
@@ -431,4 +431,194 @@
 .editor-empty-icon {
   margin: 0 auto 1rem;
   color: rgba(31, 122, 107, 0.2);
+}
+
+/* ==========================================
+   Tabs Navigation Styles
+   ========================================== */
+.editor-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.65rem;
+  width: 100%;
+}
+
+.editor-tab-btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  outline: none;
+}
+
+.editor-tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+  border-color: var(--border);
+}
+
+.editor-tab-btn--active {
+  color: var(--accent-teal);
+  background: var(--bg-card);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ==========================================
+   Preview & Code Diff Layout Styles
+   ========================================== */
+
+/* Split layout for form + preview (stacked vertically) */
+.editor-split-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2.2rem;
+  width: 100%;
+}
+
+.editor-form-panel {
+  width: 100%;
+}
+
+/* Preview panel container - stacked below form inputs */
+.editor-preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Restrict visual preview cards from stretching indefinitely, keeping them looking premium and balanced */
+.editor-preview-panel > .glass-card:not(.editor-empty-state) {
+  max-width: 680px;
+  width: 100%;
+}
+
+/* Custom scrollbar for preview panel */
+.editor-preview-panel::-webkit-scrollbar {
+  width: 5px;
+}
+.editor-preview-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-preview-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+}
+
+/* Preview sub-tabs navigation */
+.editor-preview-tabs {
+  display: flex;
+  gap: 0.45rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.55rem;
+  width: 100%;
+}
+
+.editor-preview-tab-btn {
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+  outline: none;
+}
+
+.editor-preview-tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.editor-preview-tab-btn--active {
+  color: var(--accent-teal);
+  background: var(--bg-card);
+  border-color: var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+/* JSON Code Diff Container */
+.editor-diff-box {
+  background: #0f172a; /* Slate 900 */
+  color: #e2e8f0; /* Slate 200 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 0;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Custom scrollbar for diff box */
+.editor-diff-box::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.editor-diff-box::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+.editor-diff-box::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+.editor-diff-box::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Indivdual lines inside diff */
+.diff-line {
+  display: flex;
+  align-items: center;
+  padding: 0.12rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Gutter column for line numbers */
+.diff-line-num {
+  display: inline-block;
+  width: 2.4rem;
+  text-align: right;
+  margin-right: 0.85rem;
+  color: #475569; /* Slate 600 */
+  user-select: none;
+  font-size: 0.72rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 0.55rem;
+}
+
+/* Soft emerald green highlight for additions */
+.diff-line--added {
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #34d399; /* Emerald 400 */
+}
+
+.diff-line--added .diff-line-num {
+  color: rgba(52, 211, 153, 0.4);
+}
+
+/* Soft ruby red highlight for deletions */
+.diff-line--deleted {
+  background-color: rgba(239, 68, 68, 0.18);
+  color: #f87171; /* Red 400 */
+}
+
+.diff-line--deleted .diff-line-num {
+  color: rgba(248, 113, 113, 0.4);
 }
