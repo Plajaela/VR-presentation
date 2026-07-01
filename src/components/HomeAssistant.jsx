@@ -59,7 +59,7 @@ If the user asks to see, go to, or learn about a specific topic/page, or wheneve
 - For Projects list or Portfolio: Append [NAV_/OurProjects]
 - For Specific details of Projects 1-7: Append [NAV_/OurProjects/ProjectDetail]
 - For the Patient Safety VR Training / Live Demo / Featured Demo: Append [NAV_/OurProjects/DemoProject] (Always append this tag when discussing the featured demo or Patient Safety VR Training so the user is automatically navigated to that page)
-- For collaboration or partnership opportunities: Append [NAV_/OurProjects/CollaborationOpportunities]
+- For collaboration or partnership opportunities: Append [NAV_/OurPartners]
 - For Home page: Append [NAV_/Home]
 Append the navigation tag as the absolute last characters of your response, with nothing after it — no punctuation, no spaces, no words.
 Example: "We have multiple projects like ARAST and ARA. Let's see the portfolio! [NAV_/OurProjects/ProjectDetail]"`;
@@ -71,7 +71,6 @@ const VALID_NAV_ROUTES = new Set([
   '/OurProjects',
   '/OurProjects/ProjectDetail',
   '/OurProjects/DemoProject',
-  '/OurProjects/CollaborationOpportunities',
 ]);
 
 const QUICK_PROMPTS = [
@@ -453,7 +452,7 @@ export default function HomeAssistant() {
           lowerQuery.includes('collaborat') ||
           lowerResponse.includes('collaborat')
         ) {
-          navTarget = '/OurProjects/CollaborationOpportunities';
+          navTarget = '/OurPartners';
         } else if (
           lowerQuery.includes('portfolio') ||
           lowerQuery.includes('all projects') ||

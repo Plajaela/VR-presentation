@@ -15,7 +15,6 @@ const OurProjects = lazy(() => import('./pages/OurProjects'));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const ProjectEditor = lazy(() => import('./pages/ProjectEditor'));
 const DemoProject = lazy(() => import('./pages/DemoProject'));
-const CollaborationOpportunities = lazy(() => import('./pages/CollaborationOpportunities'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const HomeAssistant = lazy(() => import('./components/HomeAssistant'));
@@ -65,7 +64,6 @@ function AnimatedRoutes() {
             <Route path="/OurProjects/ProjectDetail" element={<ProjectDetail />} />
             <Route path="/OurProjects/ProjectDetail/edit" element={<ProjectEditor />} />
             <Route path="/OurProjects/DemoProject" element={<DemoProject />} />
-            <Route path="/OurProjects/CollaborationOpportunities" element={<CollaborationOpportunities />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
