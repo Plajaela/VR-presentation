@@ -71,7 +71,7 @@ app.post('/api/projects', async (req, res) => {
     const distPath = path.join(__dirname, 'dist', 'projects.json');
     try {
       await fs.writeFile(distPath, dataString, 'utf8');
-    } catch (err) {
+    } catch {
       // Ignore if dist doesn't exist yet
     }
 
@@ -105,7 +105,7 @@ app.post('/api/demo', async (req, res) => {
     const distPath = path.join(__dirname, 'dist', 'demo.json');
     try {
       await fs.writeFile(distPath, dataString, 'utf8');
-    } catch (err) {
+    } catch {
       // Ignore if dist doesn't exist yet
     }
 
@@ -154,7 +154,7 @@ app.post('/api/upload-video', async (req, res) => {
     const distPath = path.join(distDir, safeName);
     try {
       await fs.copyFile(publicPath, distPath);
-    } catch (err) {
+    } catch {
       // Ignore if dist doesn't exist yet
     }
 

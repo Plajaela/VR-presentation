@@ -13,10 +13,10 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       setTimeout(() => {
         usernameRef.current?.focus();
+        setError('');
+        setUsername('');
+        setPassword('');
       }, 100);
-      setError('');
-      setUsername('');
-      setPassword('');
     }
   }, [isOpen]);
 

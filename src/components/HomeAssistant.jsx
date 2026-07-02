@@ -680,6 +680,11 @@ export default function HomeAssistant() {
   }, [clearRevealFallback, clearSpeakTimer]);
 
   const startListening = useCallback(async () => {
+    if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      showNotice('Voice input requires a secure connection (HTTPS). Please access the app via HTTPS or type your question.', 'warning');
+      return;
+    }
+
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       showNotice('Voice input is not supported in this browser. Please type your question.', 'warning');
       return;
