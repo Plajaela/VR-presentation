@@ -476,25 +476,65 @@
    Preview & Code Diff Layout Styles
    ========================================== */
 
-/* Split layout for form + preview (stacked vertically) */
+/* The editor dashboard benefits from more width than the content pages,
+   so the form and the live preview can sit side by side. */
+.page-container--wide {
+  max-width: 1500px;
+}
+
+/* Split layout: form on the left, live preview beside it on wide screens */
 .editor-split-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 2.2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: 1.6rem;
+  align-items: start;
   width: 100%;
 }
 
 .editor-form-panel {
   width: 100%;
+  min-width: 0;
 }
 
-/* Preview panel container - stacked below form inputs */
+/* Preview panel follows the page while the long form scrolls */
 .editor-preview-panel {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  margin-top: 0.5rem;
+  min-width: 0;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* Narrow screens: preview stacks below the form (toggle scrolls to it) */
+@media (max-width: 1280px) {
+  .editor-split-layout {
+    grid-template-columns: 1fr;
+    gap: 2.2rem;
+  }
+
+  .editor-preview-panel {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
+
+/* Auto-managed fields (e.g. display number) stay visible but not editable */
+.editor-input--readonly {
+  background: rgba(15, 23, 42, 0.045);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.editor-input--readonly:focus {
+  border-color: var(--border);
+  box-shadow: none;
 }
 
 /* Restrict visual preview cards from stretching indefinitely, keeping them looking premium and balanced */

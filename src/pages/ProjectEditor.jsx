@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/ProjectEditor.css';
@@ -96,12 +96,44 @@ const PRESET_COLORS = [
   '#14b8a6', // Mint
 ];
 
+// demo.json historically held a single demo object; newer saves hold an array.
+const normalizeDemos = (data) => {
+  if (Array.isArray(data)) return data.filter((d) => d && typeof d === 'object');
+  if (data && typeof data === 'object') return [data];
+  return [];
+};
+
+// Display numbers always follow the list order (01, 02, ...).
+const renumberProjects = (list) =>
+  list.map((proj, idx) => ({ ...proj, number: String(idx + 1).padStart(2, '0') }));
+
+const createNewDemo = () => ({
+  title: 'New Featured Demo',
+  subtitle: 'Short one-line description of this demo',
+  videoSrc: '',
+  howItWorksTitle: 'How it works',
+  description: 'Describe what the viewer experiences in this demo...',
+  highlights: [
+    { value: '', label: '' },
+    { value: '', label: '' },
+    { value: '', label: '' },
+    { value: '', label: '' },
+  ],
+  avatar: {
+    projectName: 'NewDemo',
+    projectTitle: 'New Featured Demo',
+    customPrompt: 'Explain this featured demo in an engaging way...',
+  },
+  tags: [],
+});
+
 export default function ProjectEditor() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [originalProjects, setOriginalProjects] = useState([]);
-  const [demoData, setDemoData] = useState(null);
-  const [originalDemoData, setOriginalDemoData] = useState(null);
+  const [demos, setDemos] = useState([]);
+  const [originalDemos, setOriginalDemos] = useState([]);
+  const [activeDemoIndex, setActiveDemoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('portfolio'); // 'portfolio' or 'demo'
@@ -109,6 +141,8 @@ export default function ProjectEditor() {
   const [previewTab, setPreviewTab] = useState('visual'); // 'visual' or 'diff'
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
+  const previewPanelRef = useRef(null);
+  const previewToggledRef = useRef(false);
 
   // Security Check & Data Fetch
   useEffect(() => {
@@ -128,10 +162,11 @@ export default function ProjectEditor() {
         })
     ])
       .then(([projectsData, demoJsonData]) => {
+        const demoList = normalizeDemos(demoJsonData);
         setProjects(projectsData || []);
         setOriginalProjects(JSON.parse(JSON.stringify(projectsData || [])));
-        setDemoData(demoJsonData);
-        setOriginalDemoData(JSON.parse(JSON.stringify(demoJsonData || null)));
+        setDemos(demoList);
+        setOriginalDemos(JSON.parse(JSON.stringify(demoList)));
         setLoading(false);
       })
       .catch((err) => {
@@ -150,7 +185,20 @@ export default function ProjectEditor() {
     return undefined;
   }, [toast]);
 
+  // When the user turns the preview on and it sits below the form (narrow
+  // screens), bring it into view — otherwise the toggle looks like a no-op.
+  useEffect(() => {
+    if (!previewToggledRef.current) {
+      previewToggledRef.current = true; // skip the initial mount
+      return;
+    }
+    if (showPreview) {
+      previewPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [showPreview]);
+
   const activeProject = projects[activeIndex];
+  const activeDemo = demos[activeDemoIndex];
 
   const handleFieldChange = (field, value) => {
     const updated = [...projects];
@@ -174,32 +222,28 @@ export default function ProjectEditor() {
   };
 
   const handleDemoFieldChange = (field, value) => {
-    setDemoData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setDemos((prev) =>
+      prev.map((demo, idx) => (idx === activeDemoIndex ? { ...demo, [field]: value } : demo))
+    );
   };
 
   const handleDemoHighlightChange = (index, field, value) => {
-    const updatedHighlights = [...(demoData?.highlights || [])];
-    updatedHighlights[index] = {
-      ...updatedHighlights[index],
-      [field]: value
-    };
-    setDemoData(prev => ({
-      ...prev,
-      highlights: updatedHighlights
-    }));
+    setDemos((prev) =>
+      prev.map((demo, idx) => {
+        if (idx !== activeDemoIndex) return demo;
+        const highlights = [...(demo.highlights || [])];
+        highlights[index] = { ...highlights[index], [field]: value };
+        return { ...demo, highlights };
+      })
+    );
   };
 
   const handleDemoAvatarChange = (field, value) => {
-    setDemoData(prev => ({
-      ...prev,
-      avatar: {
-        ...prev?.avatar,
-        [field]: value
-      }
-    }));
+    setDemos((prev) =>
+      prev.map((demo, idx) =>
+        idx === activeDemoIndex ? { ...demo, avatar: { ...demo.avatar, [field]: value } } : demo
+      )
+    );
   };
 
   const handleVideoUpload = async (e) => {
@@ -228,10 +272,9 @@ export default function ProjectEditor() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setDemoData(prev => ({
-          ...prev,
-          videoSrc: data.videoUrl
-        }));
+        setDemos((prev) =>
+          prev.map((demo, idx) => (idx === activeDemoIndex ? { ...demo, videoSrc: data.videoUrl } : demo))
+        );
         setToast({ message: 'Video uploaded successfully! Click Save Changes to save.', type: 'success' });
       } else {
         setToast({ message: data.message || 'Failed to upload video.', type: 'error' });
@@ -243,9 +286,8 @@ export default function ProjectEditor() {
   };
 
   const handleAddProject = () => {
-    const nextNum = String(projects.length + 1).padStart(2, '0');
     const newProj = {
-      number: nextNum,
+      number: '',
       title: 'New Assistive Technology Project',
       desc: 'Insert short project description here.',
       tag: 'Healthcare & VR',
@@ -258,7 +300,7 @@ export default function ProjectEditor() {
         customPrompt: 'Explain this new project in detail...',
       },
     };
-    setProjects([...projects, newProj]);
+    setProjects(renumberProjects([...projects, newProj]));
     setActiveIndex(projects.length);
     setToast({ message: 'New project created.', type: 'success' });
   };
@@ -268,8 +310,12 @@ export default function ProjectEditor() {
       setToast({ message: 'Cannot delete the only project.', type: 'error' });
       return;
     }
+    const title = projects[activeIndex]?.title || 'this project';
+    if (!window.confirm(`Delete "${title}"?\n\nThe remaining projects will be renumbered. Press Save Changes to make it permanent.`)) {
+      return;
+    }
     const filtered = projects.filter((_, idx) => idx !== activeIndex);
-    setProjects(filtered);
+    setProjects(renumberProjects(filtered));
     setActiveIndex(0);
     setToast({ message: 'Project deleted.', type: 'success' });
   };
@@ -281,7 +327,7 @@ export default function ProjectEditor() {
     const temp = updated[index];
     updated[index] = updated[index - 1];
     updated[index - 1] = temp;
-    setProjects(updated);
+    setProjects(renumberProjects(updated));
     if (activeIndex === index) {
       setActiveIndex(index - 1);
     } else if (activeIndex === index - 1) {
@@ -296,11 +342,61 @@ export default function ProjectEditor() {
     const temp = updated[index];
     updated[index] = updated[index + 1];
     updated[index + 1] = temp;
-    setProjects(updated);
+    setProjects(renumberProjects(updated));
     if (activeIndex === index) {
       setActiveIndex(index + 1);
     } else if (activeIndex === index + 1) {
       setActiveIndex(index);
+    }
+  };
+
+  const handleAddDemo = () => {
+    setDemos((prev) => [...prev, createNewDemo()]);
+    setActiveDemoIndex(demos.length);
+    setToast({ message: 'New featured demo created.', type: 'success' });
+  };
+
+  const handleDeleteDemo = () => {
+    if (demos.length <= 1) {
+      setToast({ message: 'Cannot delete the only featured demo.', type: 'error' });
+      return;
+    }
+    const title = demos[activeDemoIndex]?.title || 'this demo';
+    if (!window.confirm(`Delete "${title}"?\n\nPress Save Changes to make it permanent.`)) {
+      return;
+    }
+    setDemos((prev) => prev.filter((_, idx) => idx !== activeDemoIndex));
+    setActiveDemoIndex(0);
+    setToast({ message: 'Featured demo deleted.', type: 'success' });
+  };
+
+  const moveDemoUp = (index, e) => {
+    e.stopPropagation();
+    if (index === 0) return;
+    const updated = [...demos];
+    const temp = updated[index];
+    updated[index] = updated[index - 1];
+    updated[index - 1] = temp;
+    setDemos(updated);
+    if (activeDemoIndex === index) {
+      setActiveDemoIndex(index - 1);
+    } else if (activeDemoIndex === index - 1) {
+      setActiveDemoIndex(index);
+    }
+  };
+
+  const moveDemoDown = (index, e) => {
+    e.stopPropagation();
+    if (index === demos.length - 1) return;
+    const updated = [...demos];
+    const temp = updated[index];
+    updated[index] = updated[index + 1];
+    updated[index + 1] = temp;
+    setDemos(updated);
+    if (activeDemoIndex === index) {
+      setActiveDemoIndex(index + 1);
+    } else if (activeDemoIndex === index + 1) {
+      setActiveDemoIndex(index);
     }
   };
 
@@ -312,7 +408,7 @@ export default function ProjectEditor() {
       const token = localStorage.getItem('admin_token');
       const isPortfolio = activeTab === 'portfolio';
       const endpoint = isPortfolio ? '/api/projects' : '/api/demo';
-      const body = isPortfolio ? { projects } : { demoData };
+      const body = isPortfolio ? { projects } : { demoData: demos };
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -329,7 +425,7 @@ export default function ProjectEditor() {
         if (isPortfolio) {
           setOriginalProjects(JSON.parse(JSON.stringify(projects)));
         } else {
-          setOriginalDemoData(JSON.parse(JSON.stringify(demoData)));
+          setOriginalDemos(JSON.parse(JSON.stringify(demos)));
         }
         setToast({ message: isPortfolio ? 'Projects configurations saved successfully!' : 'Featured Demo configuration saved successfully!', type: 'success' });
       } else {
@@ -349,7 +445,7 @@ export default function ProjectEditor() {
   const handleDownloadBackup = () => {
     const isPortfolio = activeTab === 'portfolio';
     const filename = isPortfolio ? 'projects.json' : 'demo.json';
-    const payload = isPortfolio ? projects : demoData;
+    const payload = isPortfolio ? projects : demos;
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
@@ -364,8 +460,10 @@ export default function ProjectEditor() {
     if (window.confirm('Are you sure you want to discard all unsaved changes for this tab?')) {
       if (activeTab === 'portfolio') {
         setProjects(JSON.parse(JSON.stringify(originalProjects)));
+        setActiveIndex(0);
       } else {
-        setDemoData(JSON.parse(JSON.stringify(originalDemoData)));
+        setDemos(JSON.parse(JSON.stringify(originalDemos)));
+        setActiveDemoIndex(0);
       }
       setToast({ message: 'Draft changes discarded.', type: 'success' });
     }
@@ -618,23 +716,23 @@ export default function ProjectEditor() {
   };
 
   const renderDemoPreview = () => {
-    if (!demoData) return null;
+    if (!activeDemo) return null;
     return (
       <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255, 255, 255, 0.4)' }}>
         <span className="pill-tag pill-tag--teal" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>VISUAL PREVIEW</span>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-heading)' }}>{demoData.title || 'Featured Demo'}</h2>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>{demoData.subtitle || ''}</p>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-heading)' }}>{activeDemo.title || 'Featured Demo'}</h2>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>{activeDemo.subtitle || ''}</p>
         </div>
 
         <div style={{ background: 'rgba(0,0,0,0.1)', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          {demoData.videoSrc ? (
+          {activeDemo.videoSrc ? (
             <video
-              src={demoData.videoSrc}
+              src={activeDemo.videoSrc}
               controls
               muted
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              key={demoData.videoSrc}
+              key={activeDemo.videoSrc}
             />
           ) : (
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No video selected</span>
@@ -642,7 +740,7 @@ export default function ProjectEditor() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.65rem' }}>
-          {(demoData.highlights || []).map((h, i) => (
+          {(activeDemo.highlights || []).map((h, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.4)', border: '1px solid var(--border)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
               <div style={{ fontSize: '0.85rem', fontWeight: 750, color: 'var(--text-heading)' }}>{h.value || '-'}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{h.label || '-'}</div>
@@ -651,12 +749,12 @@ export default function ProjectEditor() {
         </div>
 
         <div>
-          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-heading)' }}>{demoData.howItWorksTitle || 'How it works'}</h4>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', margin: 0 }}>{demoData.description || ''}</p>
+          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-heading)' }}>{activeDemo.howItWorksTitle || 'How it works'}</h4>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', margin: 0 }}>{activeDemo.description || ''}</p>
         </div>
 
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          {(demoData.tags || []).map((t, idx) => (
+          {(activeDemo.tags || []).map((t, idx) => (
             <span key={idx} className="pill-tag pill-tag--teal" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>{t}</span>
           ))}
         </div>
@@ -708,8 +806,8 @@ export default function ProjectEditor() {
   };
 
   const renderDemoDiff = () => {
-    const oldJSON = JSON.stringify(originalDemoData, null, 2);
-    const newJSON = JSON.stringify(demoData, null, 2);
+    const oldJSON = JSON.stringify(originalDemos, null, 2);
+    const newJSON = JSON.stringify(demos, null, 2);
     const diffs = computeLineDiff(oldJSON, newJSON);
     
     const hasChanges = diffs.some(d => d.type !== 'unchanged');
@@ -753,7 +851,7 @@ export default function ProjectEditor() {
   const renderPreviewPanel = () => {
     const isPortfolio = activeTab === 'portfolio';
     return (
-      <div className="editor-preview-panel">
+      <div className="editor-preview-panel" ref={previewPanelRef}>
         <div className="editor-preview-tabs">
           <button
             type="button"
@@ -790,7 +888,7 @@ export default function ProjectEditor() {
   }
 
   return (
-    <div className="page-container animate-fade-in">
+    <div className="page-container page-container--wide animate-fade-in">
       {toast.message && (
         <div className={`editor-toast editor-toast--${toast.type}`} role="status">
           {toast.type === 'success' ? (
@@ -876,7 +974,7 @@ export default function ProjectEditor() {
         </button>
       </div>
 
-      <div className="editor-container" style={activeTab === 'demo' ? { gridTemplateColumns: '1fr' } : {}}>
+      <div className="editor-container">
         {activeTab === 'portfolio' ? (
           <>
             {/* Left selector sidebar */}
@@ -962,14 +1060,17 @@ export default function ProjectEditor() {
 
                     <div className="editor-grid-fields">
                       <div className="editor-field">
-                        <label className="editor-label">Display Number</label>
+                        <label className="editor-label">Display Number (Auto)</label>
                         <input
                           type="text"
-                          className="editor-input"
+                          className="editor-input editor-input--readonly"
                           value={activeProject.number || ''}
-                          onChange={(e) => handleFieldChange('number', e.target.value)}
-                          placeholder="e.g. 01"
+                          readOnly
+                          title="Set automatically from the list order"
                         />
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.3rem', display: 'block' }}>
+                          Updates automatically when you re-order, add, or delete projects.
+                        </span>
                       </div>
 
                       <div className="editor-field">
@@ -1144,15 +1245,86 @@ export default function ProjectEditor() {
             </div>
           </>
         ) : (
-          /* Demo Form Panel */
-          <div className={showPreview ? "editor-split-layout" : ""}>
+          <>
+            {/* Left selector sidebar (Featured Demos) */}
+            <div className="editor-list-panel">
+              <div className="editor-list-title-row">
+                <h2 className="editor-list-title">All Demos</h2>
+                <span style={{ fontSize: '0.75rem', fontWeight: 650, color: 'var(--text-secondary)' }}>
+                  {demos.length} Total
+                </span>
+              </div>
+
+              <div className="editor-list-cards">
+                {demos.map((demo, idx) => {
+                  const isActive = idx === activeDemoIndex;
+                  return (
+                    <div
+                      key={idx}
+                      className={`editor-item-card ${isActive ? 'editor-item-card--active' : ''}`}
+                      onClick={() => setActiveDemoIndex(idx)}
+                    >
+                      <div className="editor-item-stripe" style={{ backgroundColor: '#7c3aed' }} />
+                      <div className="editor-item-info">
+                        <span className="editor-item-number">Demo {idx + 1}</span>
+                        <h3 className="editor-item-title">{demo.title || 'Untitled Demo'}</h3>
+                      </div>
+
+                      <div className="editor-item-actions">
+                        <button
+                          type="button"
+                          className="editor-item-action-btn"
+                          onClick={(e) => moveDemoUp(idx, e)}
+                          disabled={idx === 0}
+                          title="Move Up"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="18 15 12 9 6 15"></polyline>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="editor-item-action-btn"
+                          onClick={(e) => moveDemoDown(idx, e)}
+                          disabled={idx === demos.length - 1}
+                          title="Move Down"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button type="button" className="editor-add-btn" onClick={handleAddDemo}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add New Demo
+              </button>
+            </div>
+
+            {/* Right demo editor form & optional Preview Panel */}
+            <div className={showPreview ? "editor-split-layout" : ""}>
             <div className="glass-card editor-form-panel">
-              {demoData ? (
+              {activeDemo ? (
                 <div className="editor-form-section">
-                  <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '0.5rem' }}>
                     <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
-                      Editing Featured Demo Project Details
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Editing Demo {activeDemoIndex + 1}:</span>{' '}
+                      {activeDemo.title ? (activeDemo.title.length > 30 ? activeDemo.title.substring(0, 30) + '...' : activeDemo.title) : 'Untitled'}
                     </h2>
+                    <button type="button" className="editor-btn editor-btn--danger" onClick={handleDeleteDemo} style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                      Delete Demo
+                    </button>
                   </div>
 
                   <div className="editor-grid-fields">
@@ -1161,7 +1333,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.title || ''}
+                        value={activeDemo.title || ''}
                         onChange={(e) => handleDemoFieldChange('title', e.target.value)}
                         placeholder="e.g. Featured Demo"
                       />
@@ -1172,7 +1344,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.subtitle || ''}
+                        value={activeDemo.subtitle || ''}
                         onChange={(e) => handleDemoFieldChange('subtitle', e.target.value)}
                         placeholder="Enter subtitle description"
                       />
@@ -1184,7 +1356,7 @@ export default function ProjectEditor() {
                         <input
                           type="text"
                           className="editor-input"
-                          value={demoData.videoSrc || ''}
+                          value={activeDemo.videoSrc || ''}
                           onChange={(e) => handleDemoFieldChange('videoSrc', e.target.value)}
                           placeholder="e.g. /demo-video.mp4"
                           style={{ flex: 1 }}
@@ -1209,7 +1381,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.howItWorksTitle || ''}
+                        value={activeDemo.howItWorksTitle || ''}
                         onChange={(e) => handleDemoFieldChange('howItWorksTitle', e.target.value)}
                         placeholder="e.g. How it works"
                       />
@@ -1219,7 +1391,7 @@ export default function ProjectEditor() {
                       <label className="editor-label">Demo Project Description</label>
                       <textarea
                         className="editor-textarea"
-                        value={demoData.description || ''}
+                        value={activeDemo.description || ''}
                         onChange={(e) => handleDemoFieldChange('description', e.target.value)}
                         placeholder="Describe the demo project mechanics..."
                       />
@@ -1230,7 +1402,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.tags ? demoData.tags.join(', ') : ''}
+                        value={activeDemo.tags ? activeDemo.tags.join(', ') : ''}
                         onChange={(e) => {
                           const newTags = e.target.value.split(',').map(tag => tag.trim());
                           handleDemoFieldChange('tags', newTags);
@@ -1243,7 +1415,7 @@ export default function ProjectEditor() {
                   <h3 className="editor-section-title" style={{ marginTop: '1.2rem' }}>Featured Demo Highlights</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
                     {[0, 1, 2, 3].map((idx) => {
-                      const highlight = demoData.highlights?.[idx] || { value: '', label: '' };
+                      const highlight = activeDemo.highlights?.[idx] || { value: '', label: '' };
                       return (
                         <div key={idx} className="glass-card" style={{ padding: '1rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.65rem', background: 'rgba(0, 0, 0, 0.01)' }}>
                           <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-teal)' }}>Highlight {idx + 1}</span>
@@ -1281,7 +1453,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.avatar?.projectName || ''}
+                        value={activeDemo.avatar?.projectName || ''}
                         onChange={(e) => handleDemoAvatarChange('projectName', e.target.value)}
                         placeholder="e.g. PatientSafetyVR"
                       />
@@ -1292,7 +1464,7 @@ export default function ProjectEditor() {
                       <input
                         type="text"
                         className="editor-input"
-                        value={demoData.avatar?.projectTitle || ''}
+                        value={activeDemo.avatar?.projectTitle || ''}
                         onChange={(e) => handleDemoAvatarChange('projectTitle', e.target.value)}
                         placeholder="e.g. Patient Safety VR Training (Featured Demo)"
                       />
@@ -1302,7 +1474,7 @@ export default function ProjectEditor() {
                       <label className="editor-label">Avatar Narration Speech Prompt (GPT)</label>
                       <textarea
                         className="editor-textarea editor-avatar-prompt"
-                        value={demoData.avatar?.customPrompt || ''}
+                        value={activeDemo.avatar?.customPrompt || ''}
                         onChange={(e) => handleDemoAvatarChange('customPrompt', e.target.value)}
                         placeholder="Write detailed narration script here. This script is sent to the LLM to guide speech."
                       />
@@ -1329,14 +1501,22 @@ export default function ProjectEditor() {
                 </div>
               ) : (
                 <div className="editor-empty-state">
-                  <h3>Loading Demo Data...</h3>
+                  <svg className="editor-empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                    <line x1="9" y1="13" x2="15" y2="13"></line>
+                    <line x1="9" y1="17" x2="13" y2="17"></line>
+                  </svg>
+                  <h3>No Demo Selected</h3>
+                  <p>Please select a demo from the sidebar list or add a new one to begin editing.</p>
                 </div>
               )}
             </div>
 
             {/* Preview Panel */}
             {showPreview && renderPreviewPanel()}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>

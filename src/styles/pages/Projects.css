@@ -608,6 +608,48 @@
 /* ============================
    DemoProject.jsx
    ============================ */
+
+/* Selector strip — appears when more than one featured demo is configured */
+.demo-selector-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.demo-selector-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-soft);
+}
+
+.demo-selector-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.demo-selector-btn--active {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);
+}
+
+.demo-selector-btn--active:hover {
+  color: #ffffff;
+}
+
 .demo-section {
   margin-top: 1.5rem;
 }

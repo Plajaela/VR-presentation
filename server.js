@@ -90,12 +90,19 @@ app.post('/api/demo', async (req, res) => {
   }
 
   const { demoData } = req.body;
-  if (!demoData || typeof demoData !== 'object') {
+  // Accept both the newer array-of-demos format and the legacy single object;
+  // the file is always stored as an array.
+  const demoList = Array.isArray(demoData)
+    ? demoData
+    : demoData && typeof demoData === 'object'
+      ? [demoData]
+      : null;
+  if (!demoList || demoList.some((d) => !d || typeof d !== 'object' || Array.isArray(d))) {
     return res.status(400).json({ success: false, message: 'Invalid demo data format' });
   }
 
   try {
-    const dataString = JSON.stringify(demoData, null, 2);
+    const dataString = JSON.stringify(demoList, null, 2);
     
     // Save to public/demo.json (source code)
     const publicPath = path.join(__dirname, 'public', 'demo.json');

@@ -75,6 +75,12 @@ function AnimatedRoutes() {
 function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // The floating tour button and avatar sit over the admin editor's own
+  // controls, so visitor-facing overlays stay off the editing dashboard.
+  const isAdminEditor =
+    location.pathname.replace(/\/+$/, '').toLowerCase() === '/ourprojects/projectdetail/edit';
 
   // Listen for Ctrl+Shift+A or Cmd+Shift+A key shortcut to open login
   useEffect(() => {
@@ -111,12 +117,14 @@ function AppContent() {
       <AnimatedRoutes />
       
       {/* Global 3D Avatar Assistant */}
-      <Suspense fallback={null}>
-        <HomeAssistant />
-      </Suspense>
+      {!isAdminEditor && (
+        <Suspense fallback={null}>
+          <HomeAssistant />
+        </Suspense>
+      )}
 
       {/* One-click guided presentation that narrates every section */}
-      <PresentationTour />
+      {!isAdminEditor && <PresentationTour />}
 
       {/* Global Admin login popup */}
       <AdminLoginModal

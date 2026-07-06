@@ -29,25 +29,42 @@ const DEFAULT_DEMO_DATA = {
   tags: ['Virtual Reality', 'Emergency Protocol', 'Patient Safety', 'Video Feedback']
 };
 
+// demo.json historically held a single demo object; newer saves hold an array.
+const normalizeDemos = (data) => {
+  if (Array.isArray(data)) return data.filter((d) => d && typeof d === 'object');
+  if (data && typeof data === 'object') return [data];
+  return [];
+};
+
 export default function DemoProject() {
   const navigate = useNavigate();
   const [videoFailed, setVideoFailed] = useState(false);
   const avatarState = useAvatarStatus();
-  const [demoData, setDemoData] = useState(DEFAULT_DEMO_DATA);
+  const [demos, setDemos] = useState([DEFAULT_DEMO_DATA]);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const demoData = demos[activeIdx] || demos[0] || DEFAULT_DEMO_DATA;
 
   // Load demo configuration dynamically
   useEffect(() => {
     fetch('/demo.json')
       .then((res) => res.json())
       .then((data) => {
-        if (data && typeof data === 'object') {
-          setDemoData(data);
+        const list = normalizeDemos(data);
+        if (list.length > 0) {
+          setDemos(list);
         }
       })
       .catch((err) => {
         console.error('Failed to load demo configuration:', err);
       });
   }, []);
+
+  const selectDemo = (idx) => {
+    if (idx === activeIdx) return;
+    setActiveIdx(idx);
+    setVideoFailed(false); // give the new demo's video a fresh chance to load
+  };
 
   // While the avatar narrates this page, spotlight the demo video by popping it
   // to the centre of the screen over a dimmed backdrop. It is rendered through a
@@ -88,10 +105,29 @@ export default function DemoProject() {
         <p className="page-subtitle">{demoData.subtitle}</p>
       </div>
 
+      {/* Selector strip — only shown when more than one demo is configured */}
+      {demos.length > 1 && (
+        <div className="demo-selector-strip" role="tablist" aria-label="Choose a featured demo">
+          {demos.map((demo, idx) => (
+            <button
+              key={idx}
+              type="button"
+              role="tab"
+              aria-selected={idx === activeIdx}
+              className={`demo-selector-btn ${idx === activeIdx ? 'demo-selector-btn--active' : ''}`}
+              onClick={() => selectDemo(idx)}
+            >
+              {demo.title || `Demo ${idx + 1}`}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="glass-card demo-section">
         <div className="demo-video-wrapper">
-          {!videoFailed ? (
+          {!videoFailed && demoData.videoSrc ? (
             <video
+              key={`${activeIdx}-${demoData.videoSrc}`}
               className="demo-video"
               controls
               autoPlay
@@ -112,8 +148,8 @@ export default function DemoProject() {
         </div>
 
         <div className="demo-highlight-grid">
-          {(demoData.highlights || []).map((item) => (
-            <div key={item.value} className="demo-highlight-item">
+          {(demoData.highlights || []).filter((h) => h.value || h.label).map((item, idx) => (
+            <div key={idx} className="demo-highlight-item">
               <span className="demo-highlight-value">{item.value}</span>
               <span className="demo-highlight-label">{item.label}</span>
             </div>
@@ -141,9 +177,10 @@ export default function DemoProject() {
 
       {/* Spotlight overlay — portalled to <body> so it fills the viewport and is
           never clipped by the glass-card's overflow/backdrop-filter. */}
-      {spotlight && !videoFailed && createPortal(
+      {spotlight && !videoFailed && demoData.videoSrc && createPortal(
         <div className={`demo-spotlight ${leaving ? 'is-leaving' : ''}`} aria-hidden="true">
           <video
+            key={`${activeIdx}-${demoData.videoSrc}`}
             className="demo-spotlight-video"
             autoPlay
             muted
