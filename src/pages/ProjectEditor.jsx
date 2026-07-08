@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
@@ -192,6 +192,7 @@ export default function ProjectEditor() {
   const [previewTab, setPreviewTab] = useState('visual'); // 'visual' or 'diff'
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
+  const previewScrollRef = useRef(null);
 
   // Security Check & Data Fetch
   useEffect(() => {
@@ -247,6 +248,7 @@ export default function ProjectEditor() {
     };
 
     window.addEventListener('keydown', handleKey);
+    requestAnimationFrame(() => previewScrollRef.current?.focus());
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKey);
@@ -965,12 +967,21 @@ export default function ProjectEditor() {
             </button>
           </div>
 
-          <div className="editor-preview-panel">
+          <div
+            ref={previewScrollRef}
+            className="editor-preview-panel"
+            tabIndex={-1}
+            aria-label="Scrollable preview content"
+          >
             {previewTab === 'visual' ? (
               isPortfolio ? renderPortfolioPreview() : renderDemoPreview()
             ) : (
               isPortfolio ? renderPortfolioDiff() : renderDemoDiff()
             )}
+          </div>
+
+          <div className="editor-preview-scroll-note" aria-hidden="true">
+            Scroll inside this preview to see all content
           </div>
         </div>
       </div>,
