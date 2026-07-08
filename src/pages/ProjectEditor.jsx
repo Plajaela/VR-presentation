@@ -431,19 +431,57 @@ export default function ProjectEditor() {
     setToast({ message: 'New project created.', type: 'success' });
   };
 
-  const handleDeleteProject = () => {
+  const saveProjectsToServer = async (nextProjects) => {
+    const token = localStorage.getItem('admin_token');
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ projects: nextProjects }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to save projects to server.');
+    }
+
+    return data;
+  };
+
+  const handleDeleteProject = async () => {
     if (projects.length <= 1) {
       setToast({ message: 'Cannot delete the only project.', type: 'error' });
       return;
     }
     const title = projects[activeIndex]?.title || 'this project';
-    if (!window.confirm(`Delete "${title}"?\n\nThe remaining projects will be renumbered. Press Save Changes to make it permanent.`)) {
+    if (!window.confirm(`Delete "${title}"?\n\nThis will save the deletion immediately.`)) {
       return;
     }
-    const filtered = projects.filter((_, idx) => idx !== activeIndex);
-    setProjects(renumberProjects(filtered));
-    setActiveIndex(0);
-    setToast({ message: 'Project deleted.', type: 'success' });
+
+    const previousProjects = projects;
+    const previousActiveIndex = activeIndex;
+    const nextProjects = renumberProjects(projects.filter((_, idx) => idx !== activeIndex));
+    const nextActiveIndex = Math.min(activeIndex, nextProjects.length - 1);
+
+    setProjects(nextProjects);
+    setActiveIndex(nextActiveIndex);
+    setIsSaving(true);
+    setToast({ message: 'Deleting project...', type: 'success' });
+
+    try {
+      await saveProjectsToServer(nextProjects);
+      setOriginalProjects(JSON.parse(JSON.stringify(nextProjects)));
+      setToast({ message: 'Project deleted and saved successfully.', type: 'success' });
+    } catch (err) {
+      console.error('Delete project save failed:', err);
+      setProjects(previousProjects);
+      setActiveIndex(previousActiveIndex);
+      setToast({ message: 'Delete failed. Project was restored because the server save did not complete.', type: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const moveUp = (index, e) => {
@@ -531,36 +569,35 @@ export default function ProjectEditor() {
     setToast({ message: '', type: '' });
 
     try {
-      const token = localStorage.getItem('admin_token');
       const isPortfolio = activeTab === 'portfolio';
-      const endpoint = isPortfolio ? '/api/projects' : '/api/demo';
-      const body = isPortfolio ? { projects } : { demoData: demos };
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        if (isPortfolio) {
-          setOriginalProjects(JSON.parse(JSON.stringify(projects)));
-        } else {
-          setOriginalDemos(JSON.parse(JSON.stringify(demos)));
-        }
-        setToast({ message: isPortfolio ? 'Projects configurations saved successfully!' : 'Featured Demo configuration saved successfully!', type: 'success' });
+      if (isPortfolio) {
+        await saveProjectsToServer(projects);
+        setOriginalProjects(JSON.parse(JSON.stringify(projects)));
+        setToast({ message: 'Projects configurations saved successfully!', type: 'success' });
       } else {
-        setToast({ message: data.message || 'Failed to save to server.', type: 'error' });
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch('/api/demo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ demoData: demos }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Failed to save to server.');
+        }
+
+        setOriginalDemos(JSON.parse(JSON.stringify(demos)));
+        setToast({ message: 'Featured Demo configuration saved successfully!', type: 'success' });
       }
     } catch (err) {
       console.error('Save to server failed:', err);
       setToast({
-        message: 'Could not write to local server disk. Please export JSON file and replace it manually.',
+        message: err.message || 'Could not write to local server disk. Please export JSON file and replace it manually.',
         type: 'error',
       });
     } finally {
