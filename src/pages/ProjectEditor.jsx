@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/ProjectEditor.css';
@@ -96,6 +97,56 @@ const PRESET_COLORS = [
   '#14b8a6', // Mint
 ];
 
+const DETAIL_VIEW_OPTIONS = [
+  {
+    value: '',
+    label: 'None - simple portfolio card only',
+    description: 'No expanded detail template will open from the portfolio card.',
+  },
+  {
+    value: 'isArast',
+    label: 'ARAST - Security Training',
+    description: 'ARAST (SSG-funded AR Incident Simulation & Analytics Dashboard)',
+  },
+  {
+    value: 'isAra',
+    label: 'ARA - Risk Assessment',
+    description: 'ARA (Automated Risk Assessment Photo Hazard Scanner)',
+  },
+  {
+    value: 'isMri',
+    label: 'MRI - Patient Acclimatisation',
+    description: 'MRI (Patient VR Acclimatisation System & Suitability Score)',
+  },
+  {
+    value: 'isOral',
+    label: 'Oral Exam - AI Practice',
+    description: 'Oral Exam (Secondary School English AI Practice Environment)',
+  },
+  {
+    value: 'isPolite',
+    label: 'POLITE - Workplace Safety',
+    description: 'POLITE (Immersive Ladder/Fire/Hazard Workplace Safety Package)',
+  },
+  {
+    value: 'isRoleplay',
+    label: 'Roleplay - AI Assessment',
+    description: 'Roleplay (AI-Assisted Assessment & Conversation Intents platform)',
+  },
+  {
+    value: 'isSafetyVR',
+    label: 'SafetyVR - Patient Safety',
+    description: 'SafetyVR (CGH Emergency Department Patient Safety Training)',
+  },
+];
+
+const DETAIL_VIEW_FLAGS = DETAIL_VIEW_OPTIONS
+  .map((option) => option.value)
+  .filter(Boolean);
+
+const getProjectDetailOption = (project) =>
+  DETAIL_VIEW_OPTIONS.find((option) => option.value && project?.[option.value]) || DETAIL_VIEW_OPTIONS[0];
+
 // demo.json historically held a single demo object; newer saves hold an array.
 const normalizeDemos = (data) => {
   if (Array.isArray(data)) return data.filter((d) => d && typeof d === 'object');
@@ -137,12 +188,10 @@ export default function ProjectEditor() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('portfolio'); // 'portfolio' or 'demo'
-  const [showPreview, setShowPreview] = useState(true); // show split preview panel by default
+  const [showPreview, setShowPreview] = useState(false);
   const [previewTab, setPreviewTab] = useState('visual'); // 'visual' or 'diff'
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
-  const previewPanelRef = useRef(null);
-  const previewToggledRef = useRef(false);
 
   // Security Check & Data Fetch
   useEffect(() => {
@@ -185,16 +234,23 @@ export default function ProjectEditor() {
     return undefined;
   }, [toast]);
 
-  // When the user turns the preview on and it sits below the form (narrow
-  // screens), bring it into view — otherwise the toggle looks like a no-op.
   useEffect(() => {
-    if (!previewToggledRef.current) {
-      previewToggledRef.current = true; // skip the initial mount
-      return;
-    }
-    if (showPreview) {
-      previewPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    if (!showPreview) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setShowPreview(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [showPreview]);
 
   const activeProject = projects[activeIndex];
@@ -218,6 +274,21 @@ export default function ProjectEditor() {
         [field]: value,
       },
     };
+    setProjects(updated);
+  };
+
+  const handleDetailViewChange = (value) => {
+    const updated = [...projects];
+    const project = { ...updated[activeIndex] };
+
+    DETAIL_VIEW_FLAGS.forEach((flag) => {
+      delete project[flag];
+    });
+    if (value) {
+      project[value] = true;
+    }
+
+    updated[activeIndex] = project;
     setProjects(updated);
   };
 
@@ -586,16 +657,8 @@ export default function ProjectEditor() {
   const renderPortfolioPreview = () => {
     if (!activeProject) return null;
     const ItemIcon = getIconComponent(activeProject.iconName);
-
-    // Identify which custom detail page indicator to display
-    let detailText = '';
-    if (activeProject.isArast) detailText = 'ARAST (SSG-funded AR Incident Simulation & Analytics Dashboard)';
-    else if (activeProject.isAra) detailText = 'ARA (Automated Risk Assessment Photo Hazard Scanner)';
-    else if (activeProject.isMri) detailText = 'MRI (Patient VR Acclimatisation System & Suitability Score)';
-    else if (activeProject.isOral) detailText = 'Oral Exam (Secondary School English AI Practice Environment)';
-    else if (activeProject.isPolite) detailText = 'POLITE (Immersive Ladder/Fire/Hazard Workplace Safety Package)';
-    else if (activeProject.isRoleplay) detailText = 'Roleplay (AI-Assisted Assessment & Conversation Intents platform)';
-    else if (activeProject.isSafetyVR) detailText = 'SafetyVR (CGH Emergency Department Patient Safety Training)';
+    const detailOption = getProjectDetailOption(activeProject);
+    const detailText = detailOption.value ? detailOption.description : '';
 
     return (
       <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', background: 'rgba(255, 255, 255, 0.4)' }}>
@@ -754,7 +817,7 @@ export default function ProjectEditor() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          {(activeDemo.tags || []).map((t, idx) => (
+          {(activeDemo.tags || []).filter(Boolean).map((t, idx) => (
             <span key={idx} className="pill-tag pill-tag--teal" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>{t}</span>
           ))}
         </div>
@@ -850,31 +913,68 @@ export default function ProjectEditor() {
 
   const renderPreviewPanel = () => {
     const isPortfolio = activeTab === 'portfolio';
-    return (
-      <div className="editor-preview-panel" ref={previewPanelRef}>
-        <div className="editor-preview-tabs">
-          <button
-            type="button"
-            className={`editor-preview-tab-btn ${previewTab === 'visual' ? 'editor-preview-tab-btn--active' : ''}`}
-            onClick={() => setPreviewTab('visual')}
-          >
-            Visual Preview
-          </button>
-          <button
-            type="button"
-            className={`editor-preview-tab-btn ${previewTab === 'diff' ? 'editor-preview-tab-btn--active' : ''}`}
-            onClick={() => setPreviewTab('diff')}
-          >
-            Changes Diff (JSON)
-          </button>
+    const previewTitle = isPortfolio
+      ? activeProject?.title || 'Portfolio Preview'
+      : activeDemo?.title || 'Featured Demo Preview';
+
+    return createPortal(
+      <div
+        className="editor-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editor-preview-title"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowPreview(false);
+          }
+        }}
+      >
+        <div className="editor-preview-modal-card">
+          <div className="editor-preview-modal-header">
+            <div className="editor-preview-modal-title-group">
+              <span className="section-label">Preview</span>
+              <h2 id="editor-preview-title">{previewTitle}</h2>
+            </div>
+            <button
+              type="button"
+              className="editor-preview-close"
+              onClick={() => setShowPreview(false)}
+              aria-label="Close preview"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div className="editor-preview-tabs">
+            <button
+              type="button"
+              className={`editor-preview-tab-btn ${previewTab === 'visual' ? 'editor-preview-tab-btn--active' : ''}`}
+              onClick={() => setPreviewTab('visual')}
+            >
+              Visual Preview
+            </button>
+            <button
+              type="button"
+              className={`editor-preview-tab-btn ${previewTab === 'diff' ? 'editor-preview-tab-btn--active' : ''}`}
+              onClick={() => setPreviewTab('diff')}
+            >
+              Changes Diff (JSON)
+            </button>
+          </div>
+
+          <div className="editor-preview-panel">
+            {previewTab === 'visual' ? (
+              isPortfolio ? renderPortfolioPreview() : renderDemoPreview()
+            ) : (
+              isPortfolio ? renderPortfolioDiff() : renderDemoDiff()
+            )}
+          </div>
         </div>
-        
-        {previewTab === 'visual' ? (
-          isPortfolio ? renderPortfolioPreview() : renderDemoPreview()
-        ) : (
-          isPortfolio ? renderPortfolioDiff() : renderDemoDiff()
-        )}
-      </div>
+      </div>,
+      document.body
     );
   };
 
@@ -907,24 +1007,17 @@ export default function ProjectEditor() {
         </div>
       )}
 
+      {showPreview && renderPreviewPanel()}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <BackButton onClick={() => navigate('/OurProjects/ProjectDetail')} label="Return to Portfolio" />
         <div className="editor-header-actions">
-          <button className="editor-btn editor-btn--secondary" onClick={() => setShowPreview(!showPreview)} style={{ borderColor: showPreview ? 'var(--accent-teal)' : '' }}>
+          <button className="editor-btn editor-btn--secondary" onClick={() => setShowPreview(true)}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              {showPreview ? (
-                <>
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </>
-              ) : (
-                <>
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </>
-              )}
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            {showPreview ? "Hide Preview" : "Show Preview"}
+            Open Preview
           </button>
           <button className="editor-btn editor-btn--secondary" onClick={handleDownloadBackup}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -1039,8 +1132,8 @@ export default function ProjectEditor() {
               </button>
             </div>
 
-            {/* Right editor details form & optional Preview Panel */}
-            <div className={showPreview ? "editor-split-layout" : ""}>
+            {/* Right editor details form */}
+            <div className="editor-detail-column">
               <div className="glass-card editor-form-panel">
                 {activeProject ? (
                   <div className="editor-form-section">
@@ -1145,17 +1238,22 @@ export default function ProjectEditor() {
                         </div>
                       </div>
 
-                      <div className="editor-field editor-checkbox-row">
-                        <input
-                          type="checkbox"
-                          id="isArast"
-                          className="editor-checkbox"
-                          checked={!!activeProject.isArast}
-                          onChange={(e) => handleFieldChange('isArast', e.target.checked)}
-                        />
-                        <label className="editor-label" htmlFor="isArast" style={{ cursor: 'pointer', margin: 0 }}>
-                          Enable Custom Media Overview (Show images/details panel)
-                        </label>
+                      <div className="editor-field editor-field--span-all">
+                        <label className="editor-label">Expanded Detail Page Template</label>
+                        <select
+                          className="editor-select"
+                          value={getProjectDetailOption(activeProject).value}
+                          onChange={(e) => handleDetailViewChange(e.target.value)}
+                        >
+                          {DETAIL_VIEW_OPTIONS.map((option) => (
+                            <option key={option.value || 'none'} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="editor-helper-text">
+                          Controls which custom media/details pop-up opens when this portfolio card is selected.
+                        </span>
                       </div>
                     </div>
 
@@ -1240,8 +1338,6 @@ export default function ProjectEditor() {
                 )}
               </div>
 
-              {/* Preview Panel */}
-              {showPreview && renderPreviewPanel()}
             </div>
           </>
         ) : (
@@ -1308,11 +1404,11 @@ export default function ProjectEditor() {
               </button>
             </div>
 
-            {/* Right demo editor form & optional Preview Panel */}
-            <div className={showPreview ? "editor-split-layout" : ""}>
-            <div className="glass-card editor-form-panel">
-              {activeDemo ? (
-                <div className="editor-form-section">
+            {/* Right demo editor form */}
+            <div className="editor-detail-column">
+              <div className="glass-card editor-form-panel">
+                {activeDemo ? (
+                  <div className="editor-form-section">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '0.5rem' }}>
                     <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
                       <span style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>Editing Demo {activeDemoIndex + 1}:</span>{' '}
@@ -1404,7 +1500,7 @@ export default function ProjectEditor() {
                         className="editor-input"
                         value={activeDemo.tags ? activeDemo.tags.join(', ') : ''}
                         onChange={(e) => {
-                          const newTags = e.target.value.split(',').map(tag => tag.trim());
+                          const newTags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
                           handleDemoFieldChange('tags', newTags);
                         }}
                         placeholder="e.g. Virtual Reality, Emergency Protocol, Patient Safety"
@@ -1511,10 +1607,7 @@ export default function ProjectEditor() {
                   <p>Please select a demo from the sidebar list or add a new one to begin editing.</p>
                 </div>
               )}
-            </div>
-
-            {/* Preview Panel */}
-            {showPreview && renderPreviewPanel()}
+              </div>
             </div>
           </>
         )}

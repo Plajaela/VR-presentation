@@ -169,7 +169,7 @@ export default function DemoProject() {
         </p>
 
         <div className="demo-tag-container">
-          {(demoData.tags || []).map(tag => (
+          {(demoData.tags || []).filter(Boolean).map(tag => (
             <span key={tag} className="pill-tag pill-tag--teal">{tag}</span>
           ))}
         </div>
