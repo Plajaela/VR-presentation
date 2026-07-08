@@ -66,8 +66,47 @@ const DETAIL_VIEW_FLAGS = DETAIL_VIEW_OPTIONS
   .map((option) => option.value)
   .filter(Boolean);
 
+const BUILT_IN_TEMPLATE_IMAGE_SLOTS = {
+  isArast: [
+    { key: 'arastFireSimulation', label: 'Incident Simulation Image', defaultSrc: '/arast_fire_simulation.png' },
+    { key: 'arastPackage', label: 'Suspicious Package Image', defaultSrc: '/arast_package.png' },
+    { key: 'arastDashboard', label: 'Analytics Dashboard Image', defaultSrc: '/arast_dashboard.png' },
+  ],
+  isAra: [
+    { key: 'araTablet', label: 'Risk Assessment Tablet Image', defaultSrc: '/ara_tablet.png' },
+    { key: 'araDashboard', label: 'Risk Analytics Dashboard Image', defaultSrc: '/ara_dashboard.png' },
+  ],
+  isMri: [
+    { key: 'mriTeam', label: 'VR Acclimatisation Team Image', defaultSrc: '/mri_team.png' },
+    { key: 'mriArchitecture', label: 'System Architecture Diagram', defaultSrc: '/mri_architecture.png' },
+    { key: 'mriPatient', label: 'Patient Simulation Setup Image', defaultSrc: '/mri_patient.png' },
+    { key: 'cghLogo', label: 'CGH Partner Logo', defaultSrc: '/cgh_logo.png' },
+  ],
+  isOral: [
+    { key: 'oralOverview', label: 'AI Practice Interface Image', defaultSrc: '/oral_exam_overview.png' },
+    { key: 'oralPilot', label: 'Pilot Testing Classroom Image', defaultSrc: '/oral_exam_pilot.png' },
+    { key: 'dunmanLogo', label: 'Dunman Partner Logo', defaultSrc: '/dunman_logo.png' },
+    { key: 'bartleyLogo', label: 'Bartley Partner Logo', defaultSrc: '/bartley_logo.png' },
+  ],
+  isPolite: [
+    { key: 'politeVrMockup', label: 'Immersive Safety Package Image', defaultSrc: '/polite_vr_mockup.png' },
+  ],
+  isRoleplay: [
+    { key: 'roleplayAvatar', label: 'Virtual Role-play Avatar Image', defaultSrc: '/roleplay_avatar.png' },
+    { key: 'roleplayMockup', label: 'Roleplay Dashboard Mockup Image', defaultSrc: '/roleplay_mockup.png' },
+    { key: 'jmaLogo', label: 'JMA Partner Logo', defaultSrc: '/jma_logo.png' },
+  ],
+  isSafetyVR: [
+    { key: 'patientSafetySim', label: 'Emergency Room Simulation Image', defaultSrc: '/patient_safety_sim.png' },
+    { key: 'patientSafetyTrainees', label: 'Trainees Review Image', defaultSrc: '/patient_safety_trainees.png' },
+  ],
+};
+
 const getProjectDetailOption = (project) =>
   DETAIL_VIEW_OPTIONS.find((option) => option.value && project?.[option.value]) || DETAIL_VIEW_OPTIONS[0];
+
+const getTemplateImageSlots = (project) =>
+  BUILT_IN_TEMPLATE_IMAGE_SLOTS[getProjectDetailOption(project).value] || [];
 
 const PROJECT_PREVIEW_STORAGE_KEY = 'admin_project_preview_projects';
 const DEMO_PREVIEW_STORAGE_KEY = 'admin_demo_preview_demos';
@@ -192,6 +231,7 @@ export default function ProjectEditor() {
 
   const activeProject = projects[activeIndex];
   const activeDemo = demos[activeDemoIndex];
+  const activeProjectTemplateImageSlots = getTemplateImageSlots(activeProject);
 
   const prepareVisitorPreview = () => {
     try {
@@ -231,6 +271,35 @@ export default function ProjectEditor() {
       },
     };
     setProjects(updated);
+  };
+
+  const handleTemplateImageChange = (slotKey, value) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== activeIndex) return project;
+        return {
+          ...project,
+          templateImages: {
+            ...(project.templateImages || {}),
+            [slotKey]: value,
+          },
+        };
+      })
+    );
+  };
+
+  const handleTemplateImageReset = (slotKey) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== activeIndex) return project;
+        const templateImages = { ...(project.templateImages || {}) };
+        delete templateImages[slotKey];
+        return {
+          ...project,
+          templateImages,
+        };
+      })
+    );
   };
 
   const handleDetailViewChange = (value) => {
@@ -362,48 +431,65 @@ export default function ProjectEditor() {
     }
   };
 
-  const handleProjectImageUpload = async (sectionIndex, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const uploadProjectImageFile = async (file) => {
     if (file.size > 15 * 1024 * 1024) {
-      setToast({ message: 'Image is too large. Max size is 15MB.', type: 'error' });
-      e.target.value = '';
-      return;
+      throw new Error('Image is too large. Max size is 15MB.');
     }
 
     if (!file.type.startsWith('image/')) {
-      setToast({ message: 'Please upload an image file.', type: 'error' });
-      e.target.value = '';
-      return;
+      throw new Error('Please upload an image file.');
     }
 
     setToast({ message: 'Uploading image...', type: 'success' });
     const formData = new FormData();
     formData.append('image', file);
 
+    const token = localStorage.getItem('admin_token');
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to upload image.');
+    }
+
+    return data.imageUrl;
+  };
+
+  const handleProjectImageUpload = async (sectionIndex, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        handleCustomSectionChange(sectionIndex, 'imageSrc', data.imageUrl);
-        handleCustomSectionChange(sectionIndex, 'imageAlt', activeProject?.title || file.name);
-        setToast({ message: 'Image uploaded successfully! Click Save Changes to save.', type: 'success' });
-      } else {
-        setToast({ message: data.message || 'Failed to upload image.', type: 'error' });
-      }
+      const imageUrl = await uploadProjectImageFile(file);
+      handleCustomSectionChange(sectionIndex, 'imageSrc', imageUrl);
+      handleCustomSectionChange(sectionIndex, 'imageAlt', activeProject?.title || file.name);
+      setToast({ message: 'Image uploaded successfully! Click Save Changes to save.', type: 'success' });
     } catch (err) {
       console.error('Image upload failed:', err);
-      setToast({ message: 'Network error uploading image.', type: 'error' });
+      setToast({ message: err.message || 'Network error uploading image.', type: 'error' });
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const handleTemplateImageUpload = async (slotKey, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imageUrl = await uploadProjectImageFile(file);
+      handleTemplateImageChange(slotKey, imageUrl);
+      setToast({ message: 'Template image uploaded successfully! Click Save Changes to save.', type: 'success' });
+    } catch (err) {
+      console.error('Template image upload failed:', err);
+      setToast({ message: err.message || 'Network error uploading image.', type: 'error' });
     } finally {
       e.target.value = '';
     }
@@ -1153,6 +1239,76 @@ export default function ProjectEditor() {
                         </span>
                       </div>
                     </div>
+
+                    {activeProjectTemplateImageSlots.length > 0 && (
+                      <div className="editor-section-builder editor-template-image-builder">
+                        <div className="editor-section-builder-header">
+                          <div>
+                            <h3 className="editor-section-title" style={{ margin: 0 }}>Template Images</h3>
+                            <p className="editor-section-builder-help">
+                              Replace images in this existing project template. Each image slot maps to the same location visitors see in the project pop-up.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="editor-template-image-grid">
+                          {activeProjectTemplateImageSlots.map((slot) => {
+                            const customSrc = activeProject.templateImages?.[slot.key] || '';
+                            const hasCustomSrc = typeof customSrc === 'string' && customSrc.trim();
+                            const previewSrc = hasCustomSrc ? customSrc.trim() : slot.defaultSrc;
+                            return (
+                              <div key={slot.key} className="editor-template-image-card">
+                                <div className="editor-template-image-preview">
+                                  <img src={previewSrc} alt={`${slot.label} preview`} />
+                                </div>
+
+                                <div className="editor-template-image-body">
+                                  <div className="editor-template-image-title-row">
+                                    <label className="editor-label" htmlFor={`template-image-${slot.key}`}>{slot.label}</label>
+                                    <span className={`pill-tag ${hasCustomSrc ? 'pill-tag--teal' : ''}`}>
+                                      {hasCustomSrc ? 'Custom' : 'Default'}
+                                    </span>
+                                  </div>
+
+                                  <div className="editor-upload-row editor-template-image-upload-row">
+                                    <input
+                                      id={`template-image-${slot.key}`}
+                                      type="text"
+                                      className="editor-input"
+                                      value={customSrc}
+                                      onChange={(e) => handleTemplateImageChange(slot.key, e.target.value)}
+                                      placeholder={slot.defaultSrc}
+                                    />
+                                    <label className="editor-btn editor-btn--secondary editor-upload-btn">
+                                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                                      </svg>
+                                      Upload Image
+                                      <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp,image/gif"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleTemplateImageUpload(slot.key, e)}
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      className="editor-btn editor-btn--secondary editor-upload-btn"
+                                      onClick={() => handleTemplateImageReset(slot.key)}
+                                      disabled={!hasCustomSrc}
+                                    >
+                                      Reset
+                                    </button>
+                                  </div>
+
+                                  <span className="editor-helper-text">Default location: {slot.defaultSrc}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {getProjectDetailOption(activeProject).value === 'isCustom' && (
                       <div className="editor-section-builder">

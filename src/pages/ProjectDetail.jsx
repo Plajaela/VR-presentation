@@ -268,6 +268,11 @@ const BUILT_IN_DETAIL_FLAGS = [
   'isSafetyVR',
 ];
 
+const getTemplateImage = (project, key, defaultSrc) => {
+  const customSrc = project?.templateImages?.[key];
+  return typeof customSrc === 'string' && customSrc.trim() ? customSrc.trim() : defaultSrc;
+};
+
 const isCustomProject = (project) => {
   if (!project) return false;
   return project.isCustom === true && !BUILT_IN_DETAIL_FLAGS.some((flag) => project[flag]);
@@ -647,11 +652,11 @@ export default function ProjectDetail() {
             >
               {/* Left edge premium colored stripe indicator */}
               <div className="project-item-stripe" style={{ backgroundColor: proj.color }} />
-              
+
               <div className="project-item-header">
                 {/* Left leading: high-tech custom icon & low-opacity ID number */}
                 <div className="project-item-leading">
-                  <div 
+                  <div
                     className="project-item-icon-wrapper"
                     style={{
                       background: `${proj.color}08`,
@@ -687,7 +692,7 @@ export default function ProjectDetail() {
 
                 {/* Right trailing: custom circular expand chevron button */}
                 <div className="project-item-trailing">
-                  <span 
+                  <span
                     className={`expand-chevron-btn ${isExpanded ? 'expand-chevron-btn--expanded' : ''}`}
                     style={{
                       background: isExpanded ? `${proj.color}15` : 'rgba(0, 0, 0, 0.03)',
@@ -706,7 +711,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isArast && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -720,17 +725,17 @@ export default function ProjectDetail() {
                     {/* Section 1: AR Fire Simulation & Incident Types */}
                     <div className="arast-section">
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/arast_fire_simulation.png" 
-                          alt="AR Fire Extinguisher Simulation" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'arastFireSimulation', '/arast_fire_simulation.png')}
+                          alt="AR Fire Extinguisher Simulation"
+                          className="arast-media-img"
                         />
                       </div>
                       <div className="arast-text-content">
                         <p className="arast-paragraph">
                           Co-funded by SSG, the AR Application for Security Training (ARAST) utilise image target tracking methodology to simulate security incidents such as:
                         </p>
-                        
+
                         <div className="arast-incident-grid">
                           <div className="arast-incident-item">
                             <div className="arast-icon-badge arast-icon-badge--teal">
@@ -795,10 +800,10 @@ export default function ProjectDetail() {
                         </p>
                       </div>
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/arast_package.png" 
-                          alt="AR Suspicious Package" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'arastPackage', '/arast_package.png')}
+                          alt="AR Suspicious Package"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -808,17 +813,17 @@ export default function ProjectDetail() {
                     {/* Section 3: Analytics Dashboard & Security Agency Values */}
                     <div className="arast-section">
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/arast_dashboard.png" 
-                          alt="Security Analytics Dashboard" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'arastDashboard', '/arast_dashboard.png')}
+                          alt="Security Analytics Dashboard"
+                          className="arast-media-img"
                         />
                       </div>
                       <div className="arast-text-content">
                         <p className="arast-paragraph">
                           The application also comes equipped with a database and a real-time analytics dashboard that enables security agencies to:
                         </p>
-                        
+
                         <div className="arast-value-list">
                           <div className="arast-value-row arast-value-row--teal">
                             <div className="arast-value-icon">
@@ -895,7 +900,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isAra && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -912,7 +917,7 @@ export default function ProjectDetail() {
                         <p className="arast-paragraph arast-paragraph--large" style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
                           This project aims to streamline workplace risk assessments by developing an automated system that:
                         </p>
-                        
+
                         <div className="arast-value-list" style={{ marginTop: '0.5rem' }}>
                           <div className="arast-value-row arast-value-row--teal">
                             <div className="arast-value-icon">
@@ -969,12 +974,12 @@ export default function ProjectDetail() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/ara_tablet.png" 
-                          alt="Automated Risk Assessment Tablet View" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'araTablet', '/ara_tablet.png')}
+                          alt="Automated Risk Assessment Tablet View"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -985,7 +990,7 @@ export default function ProjectDetail() {
                     <div className="arast-section arast-section--reverse">
                       <div className="arast-text-content">
                         <h3 className="arast-section-subtitle" style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-heading)', margin: '0 0 0.5rem 0' }}>Workflow:</h3>
-                        
+
                         <div className="arast-value-list">
                           <div className="arast-value-row arast-value-row--teal">
                             <div className="arast-value-icon">
@@ -1029,12 +1034,12 @@ export default function ProjectDetail() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/ara_dashboard.png" 
-                          alt="RA Management Workflow Dashboard" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'araDashboard', '/ara_dashboard.png')}
+                          alt="RA Management Workflow Dashboard"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -1056,7 +1061,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isMri && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1070,10 +1075,10 @@ export default function ProjectDetail() {
                     {/* Section 1: Intro Text with Team Image */}
                     <div className="arast-section">
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/mri_team.png" 
-                          alt="Pre-Procedure Evaluation System Team Collaboration" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'mriTeam', '/mri_team.png')}
+                          alt="Pre-Procedure Evaluation System Team Collaboration"
+                          className="arast-media-img"
                         />
                       </div>
                       <div className="arast-text-content">
@@ -1117,10 +1122,10 @@ export default function ProjectDetail() {
                     {/* Section 3: Large System Architecture Diagram */}
                     <div className="mri-diagram-section">
                       <div className="arast-media-wrapper mri-diagram-wrapper">
-                        <img 
-                          src="/mri_architecture.png" 
-                          alt="MRI System Workflow Architecture Diagram" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'mriArchitecture', '/mri_architecture.png')}
+                          alt="MRI System Workflow Architecture Diagram"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -1177,10 +1182,10 @@ export default function ProjectDetail() {
                         </p>
                       </div>
                       <div className="arast-media-wrapper">
-                        <img 
-                          src="/mri_patient.png" 
-                          alt="Patient acclimatization simulation room setup" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'mriPatient', '/mri_patient.png')}
+                          alt="Patient acclimatization simulation room setup"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -1189,10 +1194,10 @@ export default function ProjectDetail() {
                     <div className="arast-branding-footer">
                       <span className="arast-brand-label">Brand partnered with</span>
                       <div className="cgh-logo-wrapper">
-                        <img 
-                          src="/cgh_logo.png" 
-                          alt="Changi General Hospital SingHealth" 
-                          className="cgh-partner-logo-img" 
+                        <img
+                          src={getTemplateImage(proj, 'cghLogo', '/cgh_logo.png')}
+                          alt="Changi General Hospital SingHealth"
+                          className="cgh-partner-logo-img"
                         />
                       </div>
                     </div>
@@ -1204,7 +1209,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isOral && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1220,12 +1225,12 @@ export default function ProjectDetail() {
                       <p className="arast-paragraph">
                         This project creates a virtual practice environment where students interact with an AI simulating a teacher for oral exam preparation.
                       </p>
-                      
+
                       <div className="arast-media-wrapper oral-media-overview">
-                        <img 
-                          src="/oral_exam_overview.png" 
-                          alt="AI Oral Exam Practice Environment Illustration" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'oralOverview', '/oral_exam_overview.png')}
+                          alt="AI Oral Exam Practice Environment Illustration"
+                          className="arast-media-img"
                         />
                       </div>
                     </div>
@@ -1276,10 +1281,10 @@ export default function ProjectDetail() {
                     {/* Section 3: Pilot Testing */}
                     <div className="oral-pilot-section">
                       <div className="arast-media-wrapper oral-pilot-media">
-                        <img 
-                          src="/oral_exam_pilot.png" 
-                          alt="Pilot testing classroom environment" 
-                          className="arast-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'oralPilot', '/oral_exam_pilot.png')}
+                          alt="Pilot testing classroom environment"
+                          className="arast-media-img"
                         />
                       </div>
                       <div className="arast-text-content">
@@ -1294,11 +1299,11 @@ export default function ProjectDetail() {
                       <span className="arast-brand-label">Brand partnered with</span>
                       <div className="oral-logos-container">
                         <div className="oral-logo-item">
-                          <img src="/dunman_logo.png" alt="Dunman Secondary School" className="oral-partner-logo-img" />
+                          <img src={getTemplateImage(proj, 'dunmanLogo', '/dunman_logo.png')} alt="Dunman Secondary School" className="oral-partner-logo-img" />
                           <span className="oral-partner-logo-name">Dunman Secondary School</span>
                         </div>
                         <div className="oral-logo-item">
-                          <img src="/bartley_logo.png" alt="Bartley Secondary School" className="oral-partner-logo-img" />
+                          <img src={getTemplateImage(proj, 'bartleyLogo', '/bartley_logo.png')} alt="Bartley Secondary School" className="oral-partner-logo-img" />
                           <span className="oral-partner-logo-name">Bartley Secondary School</span>
                         </div>
                       </div>
@@ -1311,7 +1316,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isPolite && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1328,7 +1333,7 @@ export default function ProjectDetail() {
                     <div className="polite-layout-grid">
                       {/* Left Column: Features */}
                       <div className="polite-features-column">
-                        
+
                         <div className="polite-feature-card polite-feature-card--teal">
                           <div className="polite-feature-card-icon">
                             <VrHeadsetIcon className="polite-icon-svg" />
@@ -1396,10 +1401,10 @@ export default function ProjectDetail() {
 
                       {/* Right Column: Images */}
                       <div className="polite-images-column">
-                        <img 
-                          src="/polite_vr_mockup.png" 
-                          alt="VR simulations overview" 
-                          className="polite-vr-image" 
+                        <img
+                          src={getTemplateImage(proj, 'politeVrMockup', '/polite_vr_mockup.png')}
+                          alt="VR simulations overview"
+                          className="polite-vr-image"
                         />
                       </div>
                     </div>
@@ -1411,7 +1416,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isRoleplay && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1425,10 +1430,10 @@ export default function ProjectDetail() {
                     {/* Section 1: Top Overview (Image left, text right) */}
                     <div className="roleplay-top-section">
                       <div className="roleplay-avatar-container">
-                        <img 
-                          src="/roleplay_avatar.png" 
-                          alt="Virtual Role-play Avatar" 
-                          className="roleplay-avatar-img" 
+                        <img
+                          src={getTemplateImage(proj, 'roleplayAvatar', '/roleplay_avatar.png')}
+                          alt="Virtual Role-play Avatar"
+                          className="roleplay-avatar-img"
                         />
                       </div>
                       <div className="roleplay-top-text">
@@ -1452,7 +1457,7 @@ export default function ProjectDetail() {
                     <div className="polite-layout-grid">
                       {/* Left Column: Features */}
                       <div className="polite-features-column">
-                        
+
                         <div className="polite-feature-card polite-feature-card--teal">
                           <div className="polite-feature-card-icon">
                             <ChatPlusIcon className="polite-icon-svg" />
@@ -1502,10 +1507,10 @@ export default function ProjectDetail() {
 
                       {/* Right Column: Image */}
                       <div className="polite-images-column">
-                        <img 
-                          src="/roleplay_mockup.png" 
-                          alt="Roleplay Dashboard Mockup" 
-                          className="polite-vr-image" 
+                        <img
+                          src={getTemplateImage(proj, 'roleplayMockup', '/roleplay_mockup.png')}
+                          alt="Roleplay Dashboard Mockup"
+                          className="polite-vr-image"
                         />
                       </div>
                     </div>
@@ -1514,7 +1519,7 @@ export default function ProjectDetail() {
                     <div className="arast-branding-footer roleplay-footer">
                       <span className="arast-brand-label">Brand partnered with</span>
                       <div className="roleplay-logo-wrapper">
-                        <img src="/jma_logo.png" alt="JMA Research" className="roleplay-partner-logo-img" />
+                        <img src={getTemplateImage(proj, 'jmaLogo', '/jma_logo.png')} alt="JMA Research" className="roleplay-partner-logo-img" />
                       </div>
                     </div>
 
@@ -1525,7 +1530,7 @@ export default function ProjectDetail() {
               {isExpanded && !hasCustomDetail && proj.isSafetyVR && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
-                  
+
                   <div className="arast-container" onClick={(e) => e.stopPropagation()}>
                     <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1539,10 +1544,10 @@ export default function ProjectDetail() {
                     {/* Section 1: Top Overview */}
                     <div className="safety-top-section">
                       <div className="safety-media-container">
-                        <img 
-                          src="/patient_safety_sim.png" 
-                          alt="Virtual Emergency Department Simulation" 
-                          className="safety-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'patientSafetySim', '/patient_safety_sim.png')}
+                          alt="Virtual Emergency Department Simulation"
+                          className="safety-media-img"
                         />
                       </div>
                       <div className="safety-top-text">
@@ -1597,10 +1602,10 @@ export default function ProjectDetail() {
                         </p>
                       </div>
                       <div className="safety-bottom-media">
-                        <img 
-                          src="/patient_safety_trainees.png" 
-                          alt="Trainees using VR headsets" 
-                          className="safety-media-img" 
+                        <img
+                          src={getTemplateImage(proj, 'patientSafetyTrainees', '/patient_safety_trainees.png')}
+                          alt="Trainees using VR headsets"
+                          className="safety-media-img"
                         />
                       </div>
                     </div>
