@@ -602,35 +602,8 @@ export default function HomeAssistant() {
       }, 500);
     }
 
-    // Check if the user navigated to the ProjectDetail portfolio page.
-    // Skip during an auto-presentation tour, which supplies its own narration.
-    if (
-      currentPath === '/OurProjects/ProjectDetail' &&
-      prevPath !== '/OurProjects/ProjectDetail' &&
-      !window.__etcTourActive
-    ) {
-      const explainText = "We have many projects here! If you want to know about any project, just click into that project and let me explain it for you.";
-
-      // Make sure the assistant is expanded so they see and hear it
-      setIsCollapsed(false);
-
-      // Stop any active speech and reset
-      resetAvatarState();
-
-      // Set values and trigger TTS
-      setTranscriptText("");
-      setAiResponseText("");
-      setIsThinking(true);
-
-      // Play greeting after a brief delay for route transition stability
-      setTimeout(() => {
-        setLatestScript((prev) =>
-          prev === explainText
-            ? explainText + '\u200B'
-            : explainText
-        );
-      }, 500);
-    }
+    // Project portfolio should stay quiet on entry. Visitors can still use the
+    // manual project "Listen to Avatar Explain" buttons when they want narration.
   }, [location.pathname, resetAvatarState]);
 
   // Presentation Tour: speak a fixed script with no GPT round-trip.
