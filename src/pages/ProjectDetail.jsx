@@ -258,6 +258,37 @@ const getIconComponent = (iconName) => {
 
 const PROJECT_PREVIEW_STORAGE_KEY = 'admin_project_preview_projects';
 
+const BUILT_IN_DETAIL_FLAGS = [
+  'isArast',
+  'isAra',
+  'isMri',
+  'isOral',
+  'isPolite',
+  'isRoleplay',
+  'isSafetyVR',
+];
+
+const isCustomProject = (project) => {
+  if (!project) return false;
+  return project.isCustom === true && !BUILT_IN_DETAIL_FLAGS.some((flag) => project[flag]);
+};
+
+const getCustomProjectSections = (project) => {
+  if (Array.isArray(project?.customSections) && project.customSections.length > 0) {
+    return project.customSections;
+  }
+  return [
+    {
+      heading: 'Project Overview',
+      body: project?.desc || '',
+      imageSrc: '',
+      imageAlt: project?.title || 'Project image',
+      imageCaption: '',
+      imagePosition: 'text-only',
+    },
+  ];
+};
+
 const getInitialProjectPreviewState = () => {
   if (typeof window === 'undefined') {
     return { projects: [], expandedProject: null, previewIndex: 0, loading: true, fromAdminPreview: false };
@@ -448,6 +479,62 @@ export default function ProjectDetail() {
 
   const closeProjectModal = () => setExpandedProject(null);
 
+  const renderCustomProjectDetail = (proj) => createPortal((
+    <div className="arast-expanded-content custom-project-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
+      <div className="arast-divider"></div>
+
+      <div className="arast-container custom-project-container" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="project-modal-close" onClick={closeProjectModal} aria-label="Close project details">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <h2 className="arast-main-title">{proj.detailTitle || 'Project Overview'}</h2>
+        {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
+
+        <div className="custom-project-kicker" style={{ color: proj.color || 'var(--accent-teal)' }}>
+          {proj.tag || 'Project'}
+        </div>
+        <p className="custom-project-summary">{proj.desc}</p>
+
+        <div className="custom-project-section-list">
+          {getCustomProjectSections(proj).map((section, sectionIndex) => {
+            const imagePosition = section.imagePosition || 'right';
+            const hasImage = Boolean(section.imageSrc) && imagePosition !== 'text-only';
+            const hasText = imagePosition !== 'image-only' && Boolean(section.heading || section.body);
+
+            return (
+              <div
+                key={sectionIndex}
+                className={`custom-project-section custom-project-section--${imagePosition}`}
+              >
+                {hasImage && (
+                  <figure className="custom-project-media">
+                    <img
+                      src={section.imageSrc}
+                      alt={section.imageAlt || section.heading || proj.title}
+                    />
+                    {section.imageCaption && (
+                      <figcaption>{section.imageCaption}</figcaption>
+                    )}
+                  </figure>
+                )}
+
+                {hasText && (
+                  <div className="custom-project-copy">
+                    {section.heading && <h3>{section.heading}</h3>}
+                    {section.body && <p>{section.body}</p>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  ), document.body);
+
   if (loading) {
     return (
       <div className="route-fallback" role="status" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary)' }}>
@@ -537,6 +624,7 @@ export default function ProjectDetail() {
       <div className="stagger-children project-list">
         {visibleProjects.map((proj) => {
           const isExpanded = expandedProject === proj.title;
+          const hasCustomDetail = isCustomProject(proj);
           const Icon = getIconComponent(proj.iconName);
           return (
             <div
@@ -613,7 +701,9 @@ export default function ProjectDetail() {
                 </div>
               </div>
 
-              {isExpanded && proj.isArast && createPortal((
+              {isExpanded && hasCustomDetail && renderCustomProjectDetail(proj)}
+
+              {isExpanded && !hasCustomDetail && proj.isArast && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -802,7 +892,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isAra && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isAra && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -963,7 +1053,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isMri && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isMri && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -1111,7 +1201,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isOral && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isOral && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -1218,7 +1308,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isPolite && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isPolite && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -1318,7 +1408,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isRoleplay && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isRoleplay && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   
@@ -1432,7 +1522,7 @@ export default function ProjectDetail() {
                 </div>
               ), document.body)}
 
-              {isExpanded && proj.isSafetyVR && createPortal((
+              {isExpanded && !hasCustomDetail && proj.isSafetyVR && createPortal((
                 <div className="arast-expanded-content" onClick={(e) => { e.stopPropagation(); closeProjectModal(); }} role="dialog" aria-modal="true">
                   <div className="arast-divider"></div>
                   

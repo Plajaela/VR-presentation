@@ -22,9 +22,9 @@ const PORT = process.env.PORT || 20356;
 
 // Middleware
 app.use(cors());
-// Parse JSON bodies except for STT and video upload which use formidable
+// Parse JSON bodies except for file upload endpoints which use formidable
 app.use((req, res, next) => {
-  if (req.path === '/api/stt' || req.path === '/api/upload-video') {
+  if (req.path === '/api/stt' || req.path === '/api/upload-video' || req.path === '/api/upload-image') {
     next();
   } else {
     express.json()(req, res, next);
@@ -173,6 +173,64 @@ app.post('/api/upload-video', async (req, res) => {
   } catch (error) {
     console.error('Video upload failed:', error);
     return res.status(500).json({ success: false, message: 'Video upload failed: ' + error.message });
+  }
+});
+
+// Admin Project Image Upload Endpoint
+app.post('/api/upload-image', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== 'Bearer admin-session-token') {
+    return res.status(403).json({ success: false, message: 'Unauthorized access' });
+  }
+
+  try {
+    const form = formidable({
+      keepExtensions: true,
+      maxFileSize: 15 * 1024 * 1024, // 15MB max limit
+    });
+
+    const [, files] = await form.parse(req);
+    const imageFile = files.image?.[0];
+
+    if (!imageFile) {
+      return res.status(400).json({ success: false, message: 'No image file received' });
+    }
+
+    const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+    if (imageFile.mimetype && !allowedMimeTypes.has(imageFile.mimetype)) {
+      await fs.unlink(imageFile.filepath).catch(() => {});
+      return res.status(400).json({ success: false, message: 'Only JPG, PNG, WebP, or GIF images are allowed' });
+    }
+
+    const originalName = imageFile.originalFilename || 'uploaded-image.png';
+    const ext = path.extname(originalName).toLowerCase() || '.png';
+    const baseName = path.basename(originalName, ext).replace(/[^a-zA-Z0-9-]/g, '_');
+    const safeName = `image-${Date.now()}-${baseName}${ext}`;
+
+    const publicUploadDir = path.join(__dirname, 'public', 'uploads');
+    await fs.mkdir(publicUploadDir, { recursive: true });
+    const publicPath = path.join(publicUploadDir, safeName);
+
+    await fs.copyFile(imageFile.filepath, publicPath);
+    await fs.unlink(imageFile.filepath);
+
+    const distUploadDir = path.join(__dirname, 'dist', 'uploads');
+    const distPath = path.join(distUploadDir, safeName);
+    try {
+      await fs.mkdir(distUploadDir, { recursive: true });
+      await fs.copyFile(publicPath, distPath);
+    } catch {
+      // Ignore if dist doesn't exist yet
+    }
+
+    return res.json({
+      success: true,
+      message: 'Image uploaded successfully',
+      imageUrl: `/uploads/${safeName}`,
+    });
+  } catch (error) {
+    console.error('Image upload failed:', error);
+    return res.status(500).json({ success: false, message: 'Image upload failed: ' + error.message });
   }
 });
 

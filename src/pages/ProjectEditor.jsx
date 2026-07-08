@@ -21,6 +21,11 @@ const DETAIL_VIEW_OPTIONS = [
     description: 'No expanded detail template will open from the portfolio card.',
   },
   {
+    value: 'isCustom',
+    label: 'Custom Detail - Image Layout Builder',
+    description: 'Admin-managed sections with uploaded images and configurable image placement.',
+  },
+  {
     value: 'isArast',
     label: 'ARAST - Security Training',
     description: 'ARAST (SSG-funded AR Incident Simulation & Analytics Dashboard)',
@@ -77,6 +82,15 @@ const normalizeDemos = (data) => {
 // Display numbers always follow the list order (01, 02, ...).
 const renumberProjects = (list) =>
   list.map((proj, idx) => ({ ...proj, number: String(idx + 1).padStart(2, '0') }));
+
+const createCustomSection = () => ({
+  heading: 'Project Overview',
+  body: 'Describe this section for visitors...',
+  imageSrc: '',
+  imageAlt: '',
+  imageCaption: '',
+  imagePosition: 'right',
+});
 
 const createNewDemo = () => ({
   title: 'New Featured Demo',
@@ -229,9 +243,59 @@ export default function ProjectEditor() {
     if (value) {
       project[value] = true;
     }
+    if (value === 'isCustom' && (!Array.isArray(project.customSections) || project.customSections.length === 0)) {
+      project.customSections = [createCustomSection()];
+    }
 
     updated[activeIndex] = project;
     setProjects(updated);
+  };
+
+  const updateProjectCustomSections = (updater) => {
+    setProjects((prev) =>
+      prev.map((project, idx) => {
+        if (idx !== activeIndex) return project;
+        const currentSections = Array.isArray(project.customSections)
+          ? project.customSections
+          : [createCustomSection()];
+        return {
+          ...project,
+          isCustom: true,
+          customSections: updater(currentSections),
+        };
+      })
+    );
+  };
+
+  const handleCustomSectionChange = (sectionIndex, field, value) => {
+    updateProjectCustomSections((sections) =>
+      sections.map((section, idx) =>
+        idx === sectionIndex ? { ...section, [field]: value } : section
+      )
+    );
+  };
+
+  const handleAddCustomSection = () => {
+    updateProjectCustomSections((sections) => [...sections, createCustomSection()]);
+  };
+
+  const handleDeleteCustomSection = (sectionIndex) => {
+    updateProjectCustomSections((sections) => {
+      if (sections.length <= 1) return sections;
+      return sections.filter((_, idx) => idx !== sectionIndex);
+    });
+  };
+
+  const moveCustomSection = (sectionIndex, direction) => {
+    updateProjectCustomSections((sections) => {
+      const nextIndex = sectionIndex + direction;
+      if (nextIndex < 0 || nextIndex >= sections.length) return sections;
+      const updated = [...sections];
+      const temp = updated[sectionIndex];
+      updated[sectionIndex] = updated[nextIndex];
+      updated[nextIndex] = temp;
+      return updated;
+    });
   };
 
   const handleDemoFieldChange = (field, value) => {
@@ -298,6 +362,53 @@ export default function ProjectEditor() {
     }
   };
 
+  const handleProjectImageUpload = async (sectionIndex, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      setToast({ message: 'Image is too large. Max size is 15MB.', type: 'error' });
+      e.target.value = '';
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setToast({ message: 'Please upload an image file.', type: 'error' });
+      e.target.value = '';
+      return;
+    }
+
+    setToast({ message: 'Uploading image...', type: 'success' });
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        handleCustomSectionChange(sectionIndex, 'imageSrc', data.imageUrl);
+        handleCustomSectionChange(sectionIndex, 'imageAlt', activeProject?.title || file.name);
+        setToast({ message: 'Image uploaded successfully! Click Save Changes to save.', type: 'success' });
+      } else {
+        setToast({ message: data.message || 'Failed to upload image.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      setToast({ message: 'Network error uploading image.', type: 'error' });
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const handleAddProject = () => {
     const newProj = {
       number: '',
@@ -312,6 +423,8 @@ export default function ProjectEditor() {
         variant: 'teal',
         customPrompt: 'Explain this new project in detail...',
       },
+      isCustom: true,
+      customSections: [createCustomSection()],
     };
     setProjects(renumberProjects([...projects, newProj]));
     setActiveIndex(projects.length);
@@ -1003,6 +1116,165 @@ export default function ProjectEditor() {
                         </span>
                       </div>
                     </div>
+
+                    {getProjectDetailOption(activeProject).value === 'isCustom' && (
+                      <div className="editor-section-builder">
+                        <div className="editor-section-builder-header">
+                          <div>
+                            <h3 className="editor-section-title" style={{ margin: 0 }}>Custom Detail Page Builder</h3>
+                            <p className="editor-section-builder-help">
+                              Upload images, write page sections, and choose where each image appears in the visitor preview.
+                            </p>
+                          </div>
+                          <button type="button" className="editor-btn editor-btn--secondary" onClick={handleAddCustomSection}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <line x1="12" y1="5" x2="12" y2="19"></line>
+                              <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add Section
+                          </button>
+                        </div>
+
+                        {(Array.isArray(activeProject.customSections) && activeProject.customSections.length > 0
+                          ? activeProject.customSections
+                          : [createCustomSection()]
+                        ).map((section, sectionIndex, sections) => (
+                          <div key={sectionIndex} className="editor-custom-section-card">
+                            <div className="editor-custom-section-toolbar">
+                              <span className="pill-tag pill-tag--teal">Section {sectionIndex + 1}</span>
+                              <div className="editor-custom-section-actions">
+                                <button
+                                  type="button"
+                                  className="editor-item-action-btn"
+                                  onClick={() => moveCustomSection(sectionIndex, -1)}
+                                  disabled={sectionIndex === 0}
+                                  title="Move section up"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="18 15 12 9 6 15"></polyline>
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="editor-item-action-btn"
+                                  onClick={() => moveCustomSection(sectionIndex, 1)}
+                                  disabled={sectionIndex === sections.length - 1}
+                                  title="Move section down"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="editor-item-action-btn editor-item-action-btn--danger"
+                                  onClick={() => handleDeleteCustomSection(sectionIndex)}
+                                  disabled={sections.length <= 1}
+                                  title="Delete section"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="editor-custom-section-grid">
+                              <div className="editor-field">
+                                <label className="editor-label">Section Heading</label>
+                                <input
+                                  type="text"
+                                  className="editor-input"
+                                  value={section.heading || ''}
+                                  onChange={(e) => handleCustomSectionChange(sectionIndex, 'heading', e.target.value)}
+                                  placeholder="e.g. Prototype Overview"
+                                />
+                              </div>
+
+                              <div className="editor-field">
+                                <label className="editor-label">Image Placement</label>
+                                <select
+                                  className="editor-select"
+                                  value={section.imagePosition || 'right'}
+                                  onChange={(e) => handleCustomSectionChange(sectionIndex, 'imagePosition', e.target.value)}
+                                >
+                                  <option value="left">Image Left, Text Right</option>
+                                  <option value="right">Text Left, Image Right</option>
+                                  <option value="full">Full-width Image Above Text</option>
+                                  <option value="image-only">Image Only</option>
+                                  <option value="text-only">Text Only</option>
+                                </select>
+                              </div>
+
+                              <div className="editor-field editor-field--span-all">
+                                <label className="editor-label">Section Text</label>
+                                <textarea
+                                  className="editor-textarea"
+                                  value={section.body || ''}
+                                  onChange={(e) => handleCustomSectionChange(sectionIndex, 'body', e.target.value)}
+                                  placeholder="Write the text that should appear in this part of the project page."
+                                />
+                              </div>
+
+                              <div className="editor-field editor-field--span-all">
+                                <label className="editor-label">Image File / URL</label>
+                                <div className="editor-upload-row">
+                                  <input
+                                    type="text"
+                                    className="editor-input"
+                                    value={section.imageSrc || ''}
+                                    onChange={(e) => handleCustomSectionChange(sectionIndex, 'imageSrc', e.target.value)}
+                                    placeholder="Upload or paste image path, e.g. /uploads/project-image.png"
+                                  />
+                                  <label className="editor-btn editor-btn--secondary editor-upload-btn">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                                    </svg>
+                                    Upload Image
+                                    <input
+                                      type="file"
+                                      accept="image/png,image/jpeg,image/webp,image/gif"
+                                      style={{ display: 'none' }}
+                                      onChange={(e) => handleProjectImageUpload(sectionIndex, e)}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+
+                              <div className="editor-field">
+                                <label className="editor-label">Image Alt Text</label>
+                                <input
+                                  type="text"
+                                  className="editor-input"
+                                  value={section.imageAlt || ''}
+                                  onChange={(e) => handleCustomSectionChange(sectionIndex, 'imageAlt', e.target.value)}
+                                  placeholder="Describe the image for accessibility"
+                                />
+                              </div>
+
+                              <div className="editor-field">
+                                <label className="editor-label">Image Caption</label>
+                                <input
+                                  type="text"
+                                  className="editor-input"
+                                  value={section.imageCaption || ''}
+                                  onChange={(e) => handleCustomSectionChange(sectionIndex, 'imageCaption', e.target.value)}
+                                  placeholder="Optional caption under image"
+                                />
+                              </div>
+                            </div>
+
+                            {section.imageSrc && (
+                              <div className="editor-upload-preview">
+                                <img src={section.imageSrc} alt={section.imageAlt || section.heading || 'Project section preview'} />
+                                <span>{section.imageCaption || section.imageSrc}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Avatar Narration settings */}
                     <h3 className="editor-section-title" style={{ marginTop: '1rem' }}>AI Avatar Narration Settings</h3>
