@@ -72,11 +72,12 @@ export default function DemoProject() {
   const [initialPreviewState] = useState(getInitialDemoPreviewState);
   const [demos, setDemos] = useState(initialPreviewState.demos);
   const [activeIdx, setActiveIdx] = useState(initialPreviewState.activeIdx);
+  const isAdminPreview = initialPreviewState.fromAdminPreview;
 
   const demoData = demos[activeIdx] || demos[0] || DEFAULT_DEMO_DATA;
 
   useEffect(() => {
-    if (initialPreviewState.fromAdminPreview) return;
+    if (isAdminPreview) return;
 
     fetch('/demo.json')
       .then((res) => res.json())
@@ -89,7 +90,7 @@ export default function DemoProject() {
       .catch((err) => {
         console.error('Failed to load demo configuration:', err);
       });
-  }, [initialPreviewState.fromAdminPreview]);
+  }, [isAdminPreview]);
 
   const selectDemo = (idx) => {
     if (idx === activeIdx) return;
@@ -100,7 +101,7 @@ export default function DemoProject() {
   // While the avatar narrates this page, spotlight the demo video by popping it
   // to the centre of the screen over a dimmed backdrop. It is rendered through a
   // portal to <body> so it isn't clipped/blurred by the glass-card it lives in.
-  const presenting = avatarState.status === 'speaking';
+  const presenting = !isAdminPreview && avatarState.status === 'speaking';
   const [spotlight, setSpotlight] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -127,17 +128,19 @@ export default function DemoProject() {
   }, [presenting]);
 
   return (
-    <div className="page-container animate-fade-in">
-      <BackButton onClick={() => navigate('/OurProjects')} label="Back to Projects" />
+    <div className={`page-container animate-fade-in ${isAdminPreview ? 'demo-admin-preview' : ''}`}>
+      {!isAdminPreview && <BackButton onClick={() => navigate('/OurProjects')} label="Back to Projects" />}
 
-      <div className="page-header">
-        <span className="section-label">Live Demo</span>
-        <h1 className="page-title">{demoData.title}</h1>
-        <p className="page-subtitle">{demoData.subtitle}</p>
-      </div>
+      {!isAdminPreview && (
+        <div className="page-header">
+          <span className="section-label">Live Demo</span>
+          <h1 className="page-title">{demoData.title}</h1>
+          <p className="page-subtitle">{demoData.subtitle}</p>
+        </div>
+      )}
 
       {/* Selector strip — only shown when more than one demo is configured */}
-      {demos.length > 1 && (
+      {!isAdminPreview && demos.length > 1 && (
         <div className="demo-selector-strip" role="tablist" aria-label="Choose a featured demo">
           {demos.map((demo, idx) => (
             <button
@@ -188,13 +191,15 @@ export default function DemoProject() {
         </div>
 
         <h2 className="demo-content-title">{demoData.howItWorksTitle}</h2>
-        <AvatarExplainButton
-          projectName={demoData.avatar?.projectName || 'PatientSafetyVR'}
-          projectTitle={demoData.avatar?.projectTitle || 'Patient Safety VR Training (Featured Demo)'}
-          customPrompt={demoData.avatar?.customPrompt}
-          avatarState={avatarState}
-          style={{ marginBottom: '1rem' }}
-        />
+        {!isAdminPreview && (
+          <AvatarExplainButton
+            projectName={demoData.avatar?.projectName || 'PatientSafetyVR'}
+            projectTitle={demoData.avatar?.projectTitle || 'Patient Safety VR Training (Featured Demo)'}
+            customPrompt={demoData.avatar?.customPrompt}
+            avatarState={avatarState}
+            style={{ marginBottom: '1rem' }}
+          />
+        )}
         <p className="demo-content-desc">
           {demoData.description}
         </p>
@@ -208,7 +213,7 @@ export default function DemoProject() {
 
       {/* Spotlight overlay — portalled to <body> so it fills the viewport and is
           never clipped by the glass-card's overflow/backdrop-filter. */}
-      {spotlight && !videoFailed && demoData.videoSrc && createPortal(
+      {!isAdminPreview && spotlight && !videoFailed && demoData.videoSrc && createPortal(
         <div className={`demo-spotlight ${leaving ? 'is-leaving' : ''}`} aria-hidden="true">
           <video
             key={`${activeIdx}-${demoData.videoSrc}`}

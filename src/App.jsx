@@ -81,6 +81,8 @@ function AppContent() {
   // controls, so visitor-facing overlays stay off the editing dashboard.
   const isAdminEditor =
     location.pathname.replace(/\/+$/, '').toLowerCase() === '/ourprojects/projectdetail/edit';
+  const isAdminPreview = new URLSearchParams(location.search).get('adminPreview') === '1';
+  const hideVisitorOverlays = isAdminEditor || isAdminPreview;
 
   // Listen for Ctrl+Shift+A or Cmd+Shift+A key shortcut to open login
   useEffect(() => {
@@ -101,30 +103,34 @@ function AppContent() {
   return (
     <div className="app-root">
       {/* Background elements stay persistent across all pages */}
-      <InteractiveMeshBackground />
-      <div className="bg-animation">
-        <div className="bg-orb bg-orb-1"></div>
-        <div className="bg-orb bg-orb-2"></div>
-        <div className="bg-orb bg-orb-3"></div>
-      </div>
+      {!isAdminPreview && (
+        <>
+          <InteractiveMeshBackground />
+          <div className="bg-animation">
+            <div className="bg-orb bg-orb-1"></div>
+            <div className="bg-orb bg-orb-2"></div>
+            <div className="bg-orb bg-orb-3"></div>
+          </div>
+        </>
+      )}
 
-      <LiveClock />
+      {!isAdminPreview && <LiveClock />}
 
       {/* Reading-progress bar + back-to-top control, resets scroll per route */}
-      <ScrollProgress />
+      {!isAdminPreview && <ScrollProgress />}
 
       {/* Animated page transitions for clear separation between sections */}
       <AnimatedRoutes />
       
       {/* Global 3D Avatar Assistant */}
-      {!isAdminEditor && (
+      {!hideVisitorOverlays && (
         <Suspense fallback={null}>
           <HomeAssistant />
         </Suspense>
       )}
 
       {/* One-click guided presentation that narrates every section */}
-      {!isAdminEditor && <PresentationTour />}
+      {!hideVisitorOverlays && <PresentationTour />}
 
       {/* Global Admin login popup */}
       <AdminLoginModal

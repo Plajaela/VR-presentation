@@ -260,13 +260,13 @@ const PROJECT_PREVIEW_STORAGE_KEY = 'admin_project_preview_projects';
 
 const getInitialProjectPreviewState = () => {
   if (typeof window === 'undefined') {
-    return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+    return { projects: [], expandedProject: null, previewIndex: 0, loading: true, fromAdminPreview: false };
   }
 
   const params = new URLSearchParams(window.location.search);
   const fromAdminPreview = params.get('adminPreview') === '1';
   if (!fromAdminPreview) {
-    return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+    return { projects: [], expandedProject: null, previewIndex: 0, loading: true, fromAdminPreview: false };
   }
 
   try {
@@ -274,11 +274,11 @@ const getInitialProjectPreviewState = () => {
     const previewData = JSON.parse(sessionStorage.getItem(PROJECT_PREVIEW_STORAGE_KEY) || '[]');
     const projects = Array.isArray(previewData) ? previewData : [];
     if (projects.length > 0) {
+      const selectedIndex = Number.isInteger(previewIndex) && projects[previewIndex] ? previewIndex : 0;
       return {
         projects,
-        expandedProject: Number.isInteger(previewIndex) && projects[previewIndex]
-          ? projects[previewIndex].title
-          : null,
+        expandedProject: projects[selectedIndex]?.title || null,
+        previewIndex: selectedIndex,
         loading: false,
         fromAdminPreview: true,
       };
@@ -287,7 +287,7 @@ const getInitialProjectPreviewState = () => {
     console.warn('Failed to load admin project preview data:', err);
   }
 
-  return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+  return { projects: [], expandedProject: null, previewIndex: 0, loading: true, fromAdminPreview: false };
 };
 
 export default function ProjectDetail() {
@@ -300,9 +300,10 @@ export default function ProjectDetail() {
   const [searchQuery, setSearchQuery] = useState('');
   const avatarState = useAvatarStatus();
   const searchInputRef = useRef(null);
+  const isAdminPreview = initialPreviewState.fromAdminPreview;
 
   useEffect(() => {
-    if (initialPreviewState.fromAdminPreview) return;
+    if (isAdminPreview) return;
 
     fetch('/projects.json')
       .then((res) => res.json())
@@ -314,7 +315,16 @@ export default function ProjectDetail() {
         console.error('Failed to load projects:', err);
         setLoading(false);
       });
-  }, [initialPreviewState.fromAdminPreview]);
+  }, [isAdminPreview]);
+
+  useEffect(() => {
+    if (!isAdminPreview) return undefined;
+
+    document.body.classList.add('admin-project-preview-body');
+    return () => {
+      document.body.classList.remove('admin-project-preview-body');
+    };
+  }, [isAdminPreview]);
 
   // Press "/" anywhere on the page to jump straight to the search box.
   useEffect(() => {
@@ -332,7 +342,7 @@ export default function ProjectDetail() {
   }, []);
 
   useEffect(() => {
-    if (!expandedProject) return undefined;
+    if (!expandedProject || isAdminPreview) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -348,10 +358,10 @@ export default function ProjectDetail() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKey);
     };
-  }, [expandedProject]);
+  }, [expandedProject, isAdminPreview]);
 
   useEffect(() => {
-    if (avatarState.status !== 'speaking') return undefined;
+    if (isAdminPreview || avatarState.status !== 'speaking') return undefined;
 
     let frameId;
     let startFrameId;
@@ -409,7 +419,7 @@ export default function ProjectDetail() {
       if (startFrameId) cancelAnimationFrame(startFrameId);
       if (frameId) cancelAnimationFrame(frameId);
     };
-  }, [avatarState.durationMs, avatarState.projectName, avatarState.status, expandedProject]);
+  }, [avatarState.durationMs, avatarState.projectName, avatarState.status, expandedProject, isAdminPreview]);
 
   const projectTags = useMemo(() => {
     return ['All', ...new Set(projects.map((project) => project.tag))];
@@ -425,7 +435,14 @@ export default function ProjectDetail() {
     });
   }, [projects, activeTag, searchQuery]);
 
+  const visibleProjects = useMemo(() => {
+    if (!isAdminPreview) return filteredProjects;
+    const selectedProject = projects[initialPreviewState.previewIndex] || projects[0];
+    return selectedProject ? [selectedProject] : [];
+  }, [filteredProjects, initialPreviewState.previewIndex, isAdminPreview, projects]);
+
   const toggleExpand = (projectTitle) => {
+    if (isAdminPreview) return;
     setExpandedProject(expandedProject === projectTitle ? null : projectTitle);
   };
 
@@ -441,62 +458,66 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="page-container animate-fade-in">
-      <BackButton onClick={() => navigate('/OurProjects')} label="Back to Projects" />
+    <div className={`page-container animate-fade-in ${isAdminPreview ? 'project-detail-admin-preview' : ''}`}>
+      {!isAdminPreview && <BackButton onClick={() => navigate('/OurProjects')} label="Back to Projects" />}
 
-      <div className="page-header">
-        <span className="section-label">Research & Dev</span>
-        <h1 className="page-title">Project Portfolio</h1>
-        <p className="page-subtitle">Browse our extensive portfolio of assistive tech</p>
-      </div>
-
-      <div className="project-command-panel">
-        <div className="project-search-shell">
-          <svg className="project-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            ref={searchInputRef}
-            className="project-search-input"
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search projects, partners, or technologies"
-            aria-label="Search projects"
-          />
-          {searchQuery ? (
-            <button
-              type="button"
-              className="project-clear-search"
-              onClick={() => setSearchQuery('')}
-            >
-              Clear
-            </button>
-          ) : (
-            <kbd className="project-search-kbd" aria-hidden="true">/</kbd>
-          )}
+      {!isAdminPreview && (
+        <div className="page-header">
+          <span className="section-label">Research & Dev</span>
+          <h1 className="page-title">Project Portfolio</h1>
+          <p className="page-subtitle">Browse our extensive portfolio of assistive tech</p>
         </div>
+      )}
 
-        <div className="project-filter-row" aria-label="Filter projects by domain">
-          {projectTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              className={`project-filter-chip ${activeTag === tag ? 'project-filter-chip--active' : ''}`}
-              onClick={() => setActiveTag(tag)}
-            >
-              {tag}
-            </button>
-          ))}
+      {!isAdminPreview && (
+        <div className="project-command-panel">
+          <div className="project-search-shell">
+            <svg className="project-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              ref={searchInputRef}
+              className="project-search-input"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search projects, partners, or technologies"
+              aria-label="Search projects"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                className="project-clear-search"
+                onClick={() => setSearchQuery('')}
+              >
+                Clear
+              </button>
+            ) : (
+              <kbd className="project-search-kbd" aria-hidden="true">/</kbd>
+            )}
+          </div>
+
+          <div className="project-filter-row" aria-label="Filter projects by domain">
+            {projectTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className={`project-filter-chip ${activeTag === tag ? 'project-filter-chip--active' : ''}`}
+                onClick={() => setActiveTag(tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+
+          <div className="project-result-meta">
+            Showing {filteredProjects.length} of {projects.length} projects
+          </div>
         </div>
+      )}
 
-        <div className="project-result-meta">
-          Showing {filteredProjects.length} of {projects.length} projects
-        </div>
-      </div>
-
-      {filteredProjects.length === 0 && (
+      {!isAdminPreview && filteredProjects.length === 0 && (
         <div className="project-empty-state">
           <h2>No matching projects</h2>
           <p>Try a broader keyword or reset the domain filter.</p>
@@ -514,7 +535,7 @@ export default function ProjectDetail() {
       )}
 
       <div className="stagger-children project-list">
-        {filteredProjects.map((proj) => {
+        {visibleProjects.map((proj) => {
           const isExpanded = expandedProject === proj.title;
           const Icon = getIconComponent(proj.iconName);
           return (
@@ -604,7 +625,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: AR Fire Simulation & Incident Types */}
                     <div className="arast-section">
@@ -793,7 +814,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: Intro & System value propositions */}
                     <div className="arast-section">
@@ -954,7 +975,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: Intro Text with Team Image */}
                     <div className="arast-section">
@@ -1102,7 +1123,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: Overview and main illustration */}
                     <div className="oral-overview-section">
@@ -1209,7 +1230,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
                     <p className="arast-paragraph polite-subtitle">
                       Initiative driven by Polytechnics & ITE (POLITE) Education Technology Committee to provide:
                     </p>
@@ -1309,7 +1330,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: Top Overview (Image left, text right) */}
                     <div className="roleplay-top-section">
@@ -1423,7 +1444,7 @@ export default function ProjectDetail() {
                       </svg>
                     </button>
                     <h2 className="arast-main-title">Project Overview</h2>
-                    <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />
+                    {!isAdminPreview && <AvatarExplainButton {...proj.avatar} avatarState={avatarState} />}
 
                     {/* Section 1: Top Overview */}
                     <div className="safety-top-section">
