@@ -4,89 +4,6 @@ import { useNavigate } from 'react-router';
 import BackButton from '../components/BackButton';
 import '../styles/pages/ProjectEditor.css';
 
-// SVG Icon Component definitions to match ProjectDetail
-function SecurityShieldIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-    </svg>
-  );
-}
-
-function AiScannerIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-      <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-      <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-      <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-    </svg>
-  );
-}
-
-function MriHeartbeatIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-    </svg>
-  );
-}
-
-function EducationIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-      <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path>
-    </svg>
-  );
-}
-
-function VrHeadsetIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 14l-.5-3.5A2 2 0 0 1 5.5 8h13a2 2 0 0 1 2 2.5L20 14"></path>
-      <path d="M4 14v4a2 2 0 0 0 2 2h3l2-3h2l2 3h3a2 2 0 0 0 2-2v-4"></path>
-      <line x1="9" y1="14" x2="15" y2="14"></line>
-    </svg>
-  );
-}
-
-function RoleplayIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
-  );
-}
-
-function SafetyVrIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-      <line x1="12" y1="8" x2="12" y2="16"></line>
-      <line x1="8" y1="12" x2="16" y2="12"></line>
-    </svg>
-  );
-}
-
-const getIconComponent = (iconName) => {
-  const mapping = {
-    SecurityShieldIcon,
-    AiScannerIcon,
-    MriHeartbeatIcon,
-    EducationIcon,
-    VrHeadsetIcon,
-    RoleplayIcon,
-    SafetyVrIcon,
-  };
-  return mapping[iconName] || SecurityShieldIcon;
-};
-
 const PRESET_COLORS = [
   '#0d9488', // Teal
   '#7c3aed', // Violet
@@ -147,6 +64,9 @@ const DETAIL_VIEW_FLAGS = DETAIL_VIEW_OPTIONS
 const getProjectDetailOption = (project) =>
   DETAIL_VIEW_OPTIONS.find((option) => option.value && project?.[option.value]) || DETAIL_VIEW_OPTIONS[0];
 
+const PROJECT_PREVIEW_STORAGE_KEY = 'admin_project_preview_projects';
+const DEMO_PREVIEW_STORAGE_KEY = 'admin_demo_preview_demos';
+
 // demo.json historically held a single demo object; newer saves hold an array.
 const normalizeDemos = (data) => {
   if (Array.isArray(data)) return data.filter((d) => d && typeof d === 'object');
@@ -190,6 +110,7 @@ export default function ProjectEditor() {
   const [activeTab, setActiveTab] = useState('portfolio'); // 'portfolio' or 'demo'
   const [showPreview, setShowPreview] = useState(false);
   const [previewTab, setPreviewTab] = useState('visual'); // 'visual' or 'diff'
+  const [previewNonce, setPreviewNonce] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const previewScrollRef = useRef(null);
@@ -257,6 +178,25 @@ export default function ProjectEditor() {
 
   const activeProject = projects[activeIndex];
   const activeDemo = demos[activeDemoIndex];
+
+  const prepareVisitorPreview = () => {
+    try {
+      if (activeTab === 'portfolio') {
+        sessionStorage.setItem(PROJECT_PREVIEW_STORAGE_KEY, JSON.stringify(projects));
+      } else {
+        sessionStorage.setItem(DEMO_PREVIEW_STORAGE_KEY, JSON.stringify(demos));
+      }
+    } catch (err) {
+      console.warn('Failed to prepare admin visitor preview payload:', err);
+    }
+    setPreviewNonce(Date.now());
+  };
+
+  const handleOpenPreview = () => {
+    prepareVisitorPreview();
+    setPreviewTab('visual');
+    setShowPreview(true);
+  };
 
   const handleFieldChange = (field, value) => {
     const updated = [...projects];
@@ -598,231 +538,27 @@ export default function ProjectEditor() {
     navigate('/OurProjects/ProjectDetail');
   };
 
-  const renderProjectMediaPreview = () => {
-    let images = [];
-    if (activeProject.isArast) {
-      images = [
-        { src: '/arast_fire_simulation.png', caption: 'Incident Simulation' },
-        { src: '/arast_dashboard.png', caption: 'Analytics Dashboard' }
-      ];
-    } else if (activeProject.isAra) {
-      images = [
-        { src: '/ara_tablet.png', caption: 'Hazard Scanning Interface' },
-        { src: '/ara_dashboard.png', caption: 'Risk Evaluation Analytics' }
-      ];
-    } else if (activeProject.isMri) {
-      images = [
-        { src: '/mri_team.png', caption: 'Patient VR Acclimatisation' },
-        { src: '/mri_architecture.png', caption: 'Suitability Assessment' }
-      ];
-    } else if (activeProject.isOral) {
-      images = [
-        { src: '/oral_exam_overview.png', caption: 'AI Practice Interface' }
-      ];
-    } else if (activeProject.isPolite) {
-      images = [
-        { src: '/polite_vr_mockup.png', caption: 'Immersive Safety Package' }
-      ];
-    } else if (activeProject.isRoleplay) {
-      images = [
-        { src: '/roleplay_avatar.png', caption: 'Customisable Avatars' },
-        { src: '/roleplay_mockup.png', caption: 'Intents Authoring' }
-      ];
-    } else if (activeProject.isSafetyVR) {
-      images = [
-        { src: '/patient_safety_sim.png', caption: 'Emergency Room Simulation' }
-      ];
-    }
-
-    if (images.length === 0) return null;
+  const renderVisitorPreview = () => {
+    const isPortfolio = activeTab === 'portfolio';
+    const previewIndex = isPortfolio ? activeIndex : activeDemoIndex;
+    const previewPath = isPortfolio ? '/OurProjects/ProjectDetail' : '/OurProjects/DemoProject';
+    const previewSrc = `${previewPath}?adminPreview=1&previewIndex=${previewIndex}&previewNonce=${previewNonce}`;
+    const previewLabel = isPortfolio
+      ? activeProject?.title || 'portfolio project'
+      : activeDemo?.title || 'featured demo';
 
     return (
-      <div className="glass-card" style={{ padding: '1rem', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.75)', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: activeProject.color || 'var(--accent-teal)' }} />
-          <strong style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>Project Media Preview</strong>
+      <div className="editor-visitor-preview-shell">
+        <div className="editor-visitor-preview-toolbar">
+          <span className="pill-tag pill-tag--teal">Visitor Page Preview</span>
+          <span className="editor-visitor-preview-title">{previewLabel}</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: images.length > 1 ? '1fr 1fr' : '1fr', gap: '0.65rem' }}>
-          {images.map((img, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)', aspectRatio: '16/10', background: 'rgba(0,0,0,0.05)' }}>
-                <img src={img.src} alt={img.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', textAlign: 'center', fontWeight: 650 }}>{img.caption}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderPortfolioPreview = () => {
-    if (!activeProject) return null;
-    const ItemIcon = getIconComponent(activeProject.iconName);
-    const detailOption = getProjectDetailOption(activeProject);
-    const detailText = detailOption.value ? detailOption.description : '';
-
-    return (
-      <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', background: 'rgba(255, 255, 255, 0.4)' }}>
-        <span className="pill-tag pill-tag--teal" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>VISUAL PREVIEW</span>
-        
-        {/* Project Card Mockup */}
-        <div className="glass-card project-item-card" style={{ position: 'relative', padding: '1.25rem', border: '1px solid var(--border)', cursor: 'default' }}>
-          <div className="project-item-stripe" style={{ backgroundColor: activeProject.color, position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px' }} />
-          <div className="project-item-header" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-            <div className="project-item-leading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div 
-                className="project-item-icon-wrapper"
-                style={{
-                  background: `${activeProject.color}08`,
-                  borderColor: `${activeProject.color}1a`,
-                  color: activeProject.color,
-                  padding: '0.55rem',
-                  borderRadius: '12px',
-                  border: '1px solid',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <ItemIcon style={{ width: '20px', height: '20px' }} />
-              </div>
-              <span className="project-item-number" style={{ color: `${activeProject.color}20`, fontWeight: 800, fontSize: '1.1rem' }}>
-                {activeProject.number}
-              </span>
-            </div>
-            <div className="project-item-info" style={{ flex: 1, minWidth: 0 }}>
-              <div className="project-item-tag-row" style={{ marginBottom: '0.35rem' }}>
-                <span
-                  className="project-tag"
-                  style={{
-                    background: `${activeProject.color}0a`,
-                    color: activeProject.color,
-                    borderColor: `${activeProject.color}20`,
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: '999px',
-                    border: '1px solid',
-                    fontSize: '0.72rem',
-                    fontWeight: 650,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.3rem'
-                  }}
-                >
-                  <span style={{ display: 'inline-block', width: '5px', height: '5px', borderRadius: '50%', backgroundColor: activeProject.color }} />
-                  {activeProject.tag}
-                </span>
-              </div>
-              {/* Wraps title to multiple lines so that the entire title is fully visible */}
-              <h3 className="project-item-title" style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 0.4rem 0', color: 'var(--text-heading)', lineBreak: 'anywhere', wordBreak: 'break-word', lineHeight: '1.3' }}>
-                {activeProject.title}
-              </h3>
-              <p className="project-item-desc" style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                {activeProject.desc}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Custom Detail Page Enabled Indicator */}
-        {detailText && (
-          <div className="glass-card" style={{ padding: '0.85rem 1.1rem', border: '1px solid rgba(13, 148, 136, 0.2)', background: 'rgba(13, 148, 136, 0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontSize: '1.15rem' }}>✨</span>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.45' }}>
-              <strong style={{ color: 'var(--accent-teal)' }}>Expanded Detail View Enabled:</strong> {detailText} will be displayed on the portfolio page.
-            </div>
-          </div>
-        )}
-
-        {/* Project Media Mockup Images */}
-        {renderProjectMediaPreview()}
-
-        {/* AI Avatar voice bubble simulation preview */}
-        {activeProject.avatar && (
-          <div className="glass-card" style={{ padding: '1.1rem', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.75)', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-teal)' }} />
-                <strong style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>AI Avatar Settings Preview</strong>
-              </div>
-              <span style={{ fontSize: '0.65rem', fontWeight: 650, color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.06)', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
-                Theme: {activeProject.avatar.variant || 'teal'}
-              </span>
-            </div>
-
-            {activeProject.avatar.projectTitle && (
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-heading)', margin: '0.1rem 0' }}>
-                {activeProject.avatar.projectTitle}
-              </div>
-            )}
-
-            {activeProject.avatar.customPrompt && (
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontStyle: 'italic', background: 'rgba(0,0,0,0.02)', padding: '0.65rem 0.85rem', borderRadius: '8px', borderLeft: '3px solid var(--accent-teal)', lineHeight: '1.45' }}>
-                "{activeProject.avatar.customPrompt}"
-              </div>
-            )}
-
-            {/* Interactive Button Preview Mock */}
-            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.15rem' }}>
-              <button
-                type="button"
-                className={`avatar-explain-btn${activeProject.avatar.variant === 'violet' ? ' avatar-explain-btn--violet' : ''}`}
-                style={{ fontSize: '0.72rem', padding: '0.45rem 0.9rem', cursor: 'default' }}
-                onClick={(e) => e.preventDefault()}
-              >
-                <span style={{ marginRight: '4px' }}>✨</span>
-                Listen to Avatar Explain ({activeProject.avatar.projectName || 'ARAST'})
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderDemoPreview = () => {
-    if (!activeDemo) return null;
-    return (
-      <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255, 255, 255, 0.4)' }}>
-        <span className="pill-tag pill-tag--teal" style={{ alignSelf: 'flex-start', fontSize: '0.65rem' }}>VISUAL PREVIEW</span>
-        <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-heading)' }}>{activeDemo.title || 'Featured Demo'}</h2>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>{activeDemo.subtitle || ''}</p>
-        </div>
-
-        <div style={{ background: 'rgba(0,0,0,0.1)', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          {activeDemo.videoSrc ? (
-            <video
-              src={activeDemo.videoSrc}
-              controls
-              muted
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              key={activeDemo.videoSrc}
-            />
-          ) : (
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No video selected</span>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.65rem' }}>
-          {(activeDemo.highlights || []).map((h, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.4)', border: '1px solid var(--border)', padding: '0.6rem 0.8rem', borderRadius: '10px' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 750, color: 'var(--text-heading)' }}>{h.value || '-'}</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{h.label || '-'}</div>
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-heading)' }}>{activeDemo.howItWorksTitle || 'How it works'}</h4>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4', margin: 0 }}>{activeDemo.description || ''}</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          {(activeDemo.tags || []).filter(Boolean).map((t, idx) => (
-            <span key={idx} className="pill-tag pill-tag--teal" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>{t}</span>
-          ))}
-        </div>
+        <iframe
+          key={`${activeTab}-${previewIndex}-${previewNonce}`}
+          className="editor-visitor-preview-frame"
+          title={`Visitor preview: ${previewLabel}`}
+          src={previewSrc}
+        />
       </div>
     );
   };
@@ -974,7 +710,7 @@ export default function ProjectEditor() {
             aria-label="Scrollable preview content"
           >
             {previewTab === 'visual' ? (
-              isPortfolio ? renderPortfolioPreview() : renderDemoPreview()
+              renderVisitorPreview()
             ) : (
               isPortfolio ? renderPortfolioDiff() : renderDemoDiff()
             )}
@@ -1023,7 +759,7 @@ export default function ProjectEditor() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <BackButton onClick={() => navigate('/OurProjects/ProjectDetail')} label="Return to Portfolio" />
         <div className="editor-header-actions">
-          <button className="editor-btn editor-btn--secondary" onClick={() => setShowPreview(true)}>
+          <button className="editor-btn editor-btn--secondary" onClick={handleOpenPreview}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>

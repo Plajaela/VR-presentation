@@ -256,29 +256,65 @@ const getIconComponent = (iconName) => {
   return mapping[iconName] || SecurityShieldIcon;
 };
 
+const PROJECT_PREVIEW_STORAGE_KEY = 'admin_project_preview_projects';
+
+const getInitialProjectPreviewState = () => {
+  if (typeof window === 'undefined') {
+    return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const fromAdminPreview = params.get('adminPreview') === '1';
+  if (!fromAdminPreview) {
+    return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+  }
+
+  try {
+    const previewIndex = Number.parseInt(params.get('previewIndex') || '', 10);
+    const previewData = JSON.parse(sessionStorage.getItem(PROJECT_PREVIEW_STORAGE_KEY) || '[]');
+    const projects = Array.isArray(previewData) ? previewData : [];
+    if (projects.length > 0) {
+      return {
+        projects,
+        expandedProject: Number.isInteger(previewIndex) && projects[previewIndex]
+          ? projects[previewIndex].title
+          : null,
+        loading: false,
+        fromAdminPreview: true,
+      };
+    }
+  } catch (err) {
+    console.warn('Failed to load admin project preview data:', err);
+  }
+
+  return { projects: [], expandedProject: null, loading: true, fromAdminPreview: false };
+};
+
 export default function ProjectDetail() {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedProject, setExpandedProject] = useState(null);
+  const [initialPreviewState] = useState(getInitialProjectPreviewState);
+  const [projects, setProjects] = useState(initialPreviewState.projects);
+  const [loading, setLoading] = useState(initialPreviewState.loading);
+  const [expandedProject, setExpandedProject] = useState(initialPreviewState.expandedProject);
   const [activeTag, setActiveTag] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const avatarState = useAvatarStatus();
   const searchInputRef = useRef(null);
 
-  // Load project configurations dynamically
   useEffect(() => {
+    if (initialPreviewState.fromAdminPreview) return;
+
     fetch('/projects.json')
       .then((res) => res.json())
       .then((data) => {
-        setProjects(data);
+        setProjects(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch((err) => {
         console.error('Failed to load projects:', err);
         setLoading(false);
       });
-  }, []);
+  }, [initialPreviewState.fromAdminPreview]);
 
   // Press "/" anywhere on the page to jump straight to the search box.
   useEffect(() => {

@@ -8,6 +8,7 @@ import '../styles/pages/Projects.css';
 
 const SHOW_PAGE_DELAY = 1200; // show the demo page first, THEN pop the video
 const SPOTLIGHT_EXIT_MS = 440; // matches the CSS fade-out
+const DEMO_PREVIEW_STORAGE_KEY = 'admin_demo_preview_demos';
 
 const DEFAULT_DEMO_DATA = {
   title: 'Featured Demo',
@@ -36,17 +37,47 @@ const normalizeDemos = (data) => {
   return [];
 };
 
+const getInitialDemoPreviewState = () => {
+  if (typeof window === 'undefined') {
+    return { demos: [DEFAULT_DEMO_DATA], activeIdx: 0, fromAdminPreview: false };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const fromAdminPreview = params.get('adminPreview') === '1';
+  if (!fromAdminPreview) {
+    return { demos: [DEFAULT_DEMO_DATA], activeIdx: 0, fromAdminPreview: false };
+  }
+
+  try {
+    const previewIndex = Number.parseInt(params.get('previewIndex') || '', 10);
+    const demos = normalizeDemos(JSON.parse(sessionStorage.getItem(DEMO_PREVIEW_STORAGE_KEY) || '[]'));
+    if (demos.length > 0) {
+      return {
+        demos,
+        activeIdx: Number.isInteger(previewIndex) && demos[previewIndex] ? previewIndex : 0,
+        fromAdminPreview: true,
+      };
+    }
+  } catch (err) {
+    console.warn('Failed to load admin demo preview data:', err);
+  }
+
+  return { demos: [DEFAULT_DEMO_DATA], activeIdx: 0, fromAdminPreview: false };
+};
+
 export default function DemoProject() {
   const navigate = useNavigate();
   const [videoFailed, setVideoFailed] = useState(false);
   const avatarState = useAvatarStatus();
-  const [demos, setDemos] = useState([DEFAULT_DEMO_DATA]);
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [initialPreviewState] = useState(getInitialDemoPreviewState);
+  const [demos, setDemos] = useState(initialPreviewState.demos);
+  const [activeIdx, setActiveIdx] = useState(initialPreviewState.activeIdx);
 
   const demoData = demos[activeIdx] || demos[0] || DEFAULT_DEMO_DATA;
 
-  // Load demo configuration dynamically
   useEffect(() => {
+    if (initialPreviewState.fromAdminPreview) return;
+
     fetch('/demo.json')
       .then((res) => res.json())
       .then((data) => {
@@ -58,7 +89,7 @@ export default function DemoProject() {
       .catch((err) => {
         console.error('Failed to load demo configuration:', err);
       });
-  }, []);
+  }, [initialPreviewState.fromAdminPreview]);
 
   const selectDemo = (idx) => {
     if (idx === activeIdx) return;
